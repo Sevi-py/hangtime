@@ -100,7 +100,7 @@ struct ClaudeProvider: UsageProvider {
         // Anthropic rate-limits this endpoint aggressively (per token). Respect Retry-After and never
         // poll more than every few minutes; serve the freshest cached body in between.
         if let wait = await Self.cache.retryAfter, wait > .now {
-            return await bestCached(into: snap)
+            return await fallback(await bestCached(into: snap), token: creds!.accessToken, version: version)
         }
         if let at = await Self.cache.fetchedAt, Date.now.timeIntervalSince(at) < Self.minInterval,
            await Self.cache.lastBody != nil {
@@ -124,14 +124,15 @@ struct ClaudeProvider: UsageProvider {
             return ProviderSnapshot(provider: id, status: .loggedOut, cliVersion: version)
         } catch ClaudeError.rateLimited(let retry) {
             await Self.cache.setRetry(Self.cache.backoff(serverRetry: retry))
-            return await bestCached(into: snap)
+            return await fallback(await bestCached(into: snap), token: creds!.accessToken, version: version)
         } catch {
             if await Self.cache.lastBody != nil || Self.cliCache() != nil {
                 var s = await bestCached(into: snap)
                 s.notes.append("Couldn't reach Anthropic – showing last known values.")
-                return s
+                return await fallback(s, token: creds!.accessToken, version: version)
             }
-            return fromCache(into: snap, reason: "Couldn't reach Anthropic: \(error.localizedDescription)")
+            return await fallback(fromCache(into: snap, reason: "Couldn't reach Anthropic: \(error.localizedDescription)"),
+                                  token: creds!.accessToken, version: version)
         }
     }
 
@@ -158,6 +159,7 @@ struct ClaudeProvider: UsageProvider {
             + "."
         for i in snap.windows.indices {
             snap.windows[i].isStale = true
+            snap.windows[i].asOf = asOf
             if let r = snap.windows[i].resetsAt, r <= .now {
                 snap.windows[i].usedFraction = 0
                 snap.windows[i].resetsAt = nil
@@ -202,6 +204,153 @@ struct ClaudeProvider: UsageProvider {
         var out = parse(body, into: snap, note: note)
         if let at = JSON.date(cached["fetchedAtMs"]) { out.dataAsOf = at }
         return out
+    }
+
+    // MARK: Fallback: quota probe + limits hit in Claude Code's logs
+
+    /// UserDefaults key of the "check with a tiny request" setting (on by default).
+    static let probeSettingKey = "claudeProbe"
+    static var probeEnabled: Bool { UserDefaults.standard.object(forKey: probeSettingKey) as? Bool ?? true }
+    /// At most one probe every 10 minutes, whether it worked or not.
+    static let probeInterval: TimeInterval = 600
+    static let probeModel = "claude-haiku-5-5"
+
+    /// One limit as read from rate-limit headers or a logged rejection. Keys are the backend's limit names:
+    /// `five_hour`, `seven_day`, `seven_day_overage_included` (the model-scoped weekly limit, e.g. Fable).
+    struct LiveLimit: Codable { var used: Double; var resetsAt: Date? }
+    struct LiveReading: Codable { var at: Date; var limits: [String: LiveLimit] }
+
+    /// Used while `/api/oauth/usage` is blocked. Session and weekly usage also come back as headers on every
+    /// model reply, so we ask for one token from Haiku (what Claude Code's own quota probe does) and read
+    /// them off. When the limit is used up the request is refused, and the refusal says which limit and when
+    /// it resets. Hit limits Claude Code recorded in its transcripts are used too, at no cost.
+    private func fallback(_ base: ProviderSnapshot, token: String, version: String?) async -> ProviderSnapshot {
+        let baseAt = base.status == .ok && !base.windows.isEmpty ? (base.dataAsOf ?? .distantPast) : .distantPast
+        var probe: LiveReading? = nil
+        if Self.probeEnabled {
+            if await Self.cache.claimProbeSlot(interval: Self.probeInterval),
+               let fresh = await quotaProbe(token: token, version: version) {
+                await Self.cache.storeProbe(fresh)
+            }
+            probe = await Self.cache.lastProbe
+        }
+        var readings: [LiveReading] = []
+        if let probe, probe.at > baseAt { readings.append(probe) }
+        let since = max(baseAt, probe?.at ?? .distantPast)
+        readings += Self.loggedLimitHits(since: since)
+        guard !readings.isEmpty else { return base }
+
+        var snap = base
+        if snap.status != .ok { snap.status = .ok }
+        for r in readings.sorted(by: { $0.at < $1.at }) {  // newest wins
+            for (key, limit) in r.limits { apply(limit, key: key, at: r.at, to: &snap) }
+        }
+        snap.dataAsOf = readings.map(\.at).max()
+        let old = snap.windows.filter { $0.isStale == true }
+        if old.isEmpty {
+            snap.staleReason = nil
+        } else if old.count < snap.windows.count {
+            let names = old.map { $0.scope ?? $0.title }.joined(separator: ", ")
+            let retry = await Self.cache.retryAfter.flatMap { $0 > .now ? " – retrying \(DateFmt.time($0))" : nil } ?? ""
+            snap.staleReason = "\(names): last known value. Anthropic is limiting usage checks\(retry)."
+        }
+        return snap
+    }
+
+    private func apply(_ limit: LiveLimit, key: String, at: Date, to snap: inout ProviderSnapshot) {
+        var used = limit.used, reset = limit.resetsAt
+        if let r = reset, r <= .now { used = 0; reset = nil }  // that window has reset since
+        let stale = Date.now.timeIntervalSince(at) > 2 * Self.probeInterval
+        let idx: Int?
+        switch key {
+        case "five_hour": idx = snap.windows.firstIndex { $0.kind == .session }
+        case "seven_day": idx = snap.windows.firstIndex { $0.kind == .weekly }
+        case "seven_day_overage_included":
+            // Only trust a refusal for the model-scoped limit, and only when it's clear which window that is.
+            let models = snap.windows.indices.filter { snap.windows[$0].kind == .model }
+            guard limit.used >= 1, models.count == 1 else { return }
+            idx = models.first
+        default: return
+        }
+        if let i = idx {
+            snap.windows[i].usedFraction = min(max(used, 0), 1)
+            snap.windows[i].resetsAt = reset
+            snap.windows[i].isStale = stale ? true : nil
+            snap.windows[i].asOf = at
+        } else if key == "five_hour" || key == "seven_day" {
+            let session = key == "five_hour"
+            var w = UsageWindow(id: session ? "limits.session.all" : "limits.weekly_all.all",
+                                kind: session ? .session : .weekly, title: session ? "Session (5h)" : "Weekly",
+                                usedFraction: used, resetsAt: reset, duration: session ? 5 * 3600 : 7 * 86400)
+            w.isStale = stale ? true : nil
+            w.asOf = at
+            snap.windows.append(w)
+        }
+    }
+
+    /// Sends a one-token Haiku request (no thinking) and reads the unified rate-limit headers.
+    private func quotaProbe(token: String, version: String?) async -> LiveReading? {
+        var req = URLRequest(url: Self.base.appendingPathComponent("v1/messages"), timeoutInterval: 20)
+        req.httpMethod = "POST"
+        Self.authorize(&req, token: token, version: version)
+        // OAuth requests are only served when they look like Claude Code's own.
+        req.setValue("claude-code-20250219,oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
+        req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        req.setValue("cli", forHTTPHeaderField: "x-app")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: Any] = [
+            "model": Self.probeModel, "max_tokens": 1, "thinking": ["type": "disabled"],
+            "system": [["type": "text", "text": "You are Claude Code, Anthropic's official CLI for Claude."]],
+            "messages": [["role": "user", "content": "quota"]],
+        ]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        guard let (_, resp) = try? await URLSession.shared.data(for: req),
+              let http = resp as? HTTPURLResponse else { return nil }
+        func header(_ name: String) -> String? { http.value(forHTTPHeaderField: "anthropic-ratelimit-unified-\(name)") }
+        func date(_ name: String) -> Date? { header(name).flatMap(Double.init).map { Date(timeIntervalSince1970: $0) } }
+
+        var limits: [String: LiveLimit] = [:]
+        for (key, claim) in [("five_hour", "5h"), ("seven_day", "7d"), ("seven_day_overage_included", "7d_oi")] {
+            let util = header("\(claim)-utilization").flatMap(Double.init)
+            let status = header("\(claim)-status")
+            guard util != nil || status != nil else { continue }
+            // The model-scoped share isn't a plain percentage of its own limit; only a refusal is unambiguous.
+            if key == "seven_day_overage_included" && status != "rejected" { continue }
+            limits[key] = LiveLimit(used: status == "rejected" ? 1 : (util ?? 0), resetsAt: date("\(claim)-reset"))
+        }
+        // Out of usage: the request is refused, and the headers say which limit and until when.
+        if header("status") == "rejected", let claim = header("representative-claim") {
+            limits[claim] = LiveLimit(used: 1, resetsAt: limits[claim]?.resetsAt ?? date("reset"))
+        }
+        return limits.isEmpty ? nil : LiveReading(at: .now, limits: limits)
+    }
+
+    /// Limits Claude Code ran into, from its transcripts (`apiError: usage_limit_reached`). Only entries newer
+    /// than `since` whose reset is still ahead count, and only files written since then are read.
+    static func loggedLimitHits(since: Date) -> [LiveReading] {
+        let floor = max(since, Date.now.addingTimeInterval(-7 * 86400))
+        let root = configDir.appendingPathComponent("projects", isDirectory: true)
+        guard let files = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.contentModificationDateKey],
+                                                         options: [.skipsHiddenFiles]) else { return [] }
+        let needle = Data("usage_limit_reached".utf8)
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var newest: [String: (at: Date, limit: LiveLimit)] = [:]
+        for case let url as URL in files where url.pathExtension == "jsonl" {
+            guard let mod = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate,
+                  mod > floor, let data = try? Data(contentsOf: url, options: .mappedIfSafe),
+                  data.range(of: needle) != nil else { continue }
+            for line in data.split(separator: UInt8(ascii: "\n")) where line.range(of: needle) != nil {
+                guard let obj = JSON.object(Data(line)), JSON.string(obj["apiError"]) == "usage_limit_reached",
+                      let ts = JSON.string(obj["timestamp"]).flatMap(iso.date(from:)), ts > floor,
+                      let info = (obj["apiErrorParams"] as? [String: Any])?["rate_limit_info"] as? [String: Any],
+                      JSON.string(info["status"]) == "rejected", let type = JSON.string(info["rateLimitType"]),
+                      let reset = JSON.double(info["resetsAt"]).map({ Date(timeIntervalSince1970: $0) }), reset > .now
+                else { continue }
+                if (newest[type]?.at ?? .distantPast) < ts { newest[type] = (ts, LiveLimit(used: 1, resetsAt: reset)) }
+            }
+        }
+        return newest.map { LiveReading(at: $0.value.at, limits: [$0.key: $0.value.limit]) }
     }
 
     enum ClaudeError: Error { case unauthorized, rateLimited(Date?), http(Int) }
@@ -545,7 +694,30 @@ final class ClaudeCache: @unchecked Sendable {
     }
 
     /// After a redeem/login we want fresh numbers, but never ignore a server backoff.
-    func invalidate() async { sync { at = nil } }
+    func invalidate() async { sync { at = nil; probeAttempt = nil } }
+
+    // Quota probe (fallback while the usage endpoint is blocked). Persisted so relaunches respect the interval.
+    private var probe: ClaudeProvider.LiveReading? = UserDefaults.standard.data(forKey: "claude.probe")
+        .flatMap { try? JSONDecoder().decode(ClaudeProvider.LiveReading.self, from: $0) }
+    private var probeAttempt: Date? = UserDefaults.standard.object(forKey: "claude.probeAttemptAt") as? Date
+
+    var lastProbe: ClaudeProvider.LiveReading? { get async { sync { probe } } }
+
+    /// True (and records the attempt) when no probe was sent within `interval`.
+    func claimProbeSlot(interval: TimeInterval) async -> Bool {
+        let ok = sync { () -> Bool in
+            if let last = probeAttempt, Date.now.timeIntervalSince(last) < interval, last <= .now { return false }
+            probeAttempt = .now
+            return true
+        }
+        if ok { UserDefaults.standard.set(Date.now, forKey: "claude.probeAttemptAt") }
+        return ok
+    }
+
+    func storeProbe(_ r: ClaudeProvider.LiveReading) async {
+        sync { probe = r }
+        if let d = try? JSONEncoder().encode(r) { UserDefaults.standard.set(d, forKey: "claude.probe") }
+    }
 
     func version(for cmd: String) async -> String? {
         sync {

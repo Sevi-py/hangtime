@@ -81,6 +81,9 @@ final class AppSettings {
     var notifyResetExpiry: Bool { didSet { save() } }
     var notifyLoggedOut: Bool { didSet { save() } }
 
+    /// Claude: when Anthropic blocks usage checks, read the limits off a tiny Haiku request instead.
+    var claudeProbe: Bool { didSet { save() } }
+
     private init() {
         func dict<T>(_ key: String, _ def: (ProviderID) -> T) -> [ProviderID: T] {
             let stored = UserDefaults.standard.dictionary(forKey: key) ?? [:]
@@ -114,6 +117,7 @@ final class AppSettings {
         lowThreshold = d.object(forKey: "lowThreshold") as? Double ?? 0.1
         notifyResetExpiry = d.object(forKey: "notifyResetExpiry") as? Bool ?? true
         notifyLoggedOut = d.object(forKey: "notifyLoggedOut") as? Bool ?? true
+        claudeProbe = d.object(forKey: ClaudeProvider.probeSettingKey) as? Bool ?? true
     }
 
     private func save() {
@@ -141,6 +145,7 @@ final class AppSettings {
         d.set(lowThreshold, forKey: "lowThreshold")
         d.set(notifyResetExpiry, forKey: "notifyResetExpiry")
         d.set(notifyLoggedOut, forKey: "notifyLoggedOut")
+        d.set(claudeProbe, forKey: ClaudeProvider.probeSettingKey)
 
         let g = SharedStore.defaults
         g.set(showPaceMarker, forKey: SharedStore.Key.showPaceMarker)

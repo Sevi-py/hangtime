@@ -196,6 +196,17 @@ private struct ProviderDetail: View {
                     .disabled(model.busy.contains("login.\(provider.rawValue)") || !(model.install[provider]?.isInstalled ?? false))
                 }
             }
+            if provider == .claude {
+                @Bindable var s = s
+                Section {
+                    Toggle("Check with a tiny request when usage checks are blocked", isOn: $s.claudeProbe)
+                } header: {
+                    Text("Usage checks")
+                } footer: {
+                    Text("Anthropic often blocks usage checks for a while. Headroom then sends a one-token Haiku request, at most every 10 minutes, and reads your session and weekly usage from the reply. It uses a tiny bit of your session, and starts a new session if none is running. Model limits like Fable and banked resets update once regular checks work again.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
         }
         .formStyle(.grouped)
         .onAppear { draftCommand = s.commands[provider] ?? provider.defaultCommand }

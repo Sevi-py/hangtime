@@ -231,7 +231,7 @@ public struct WindowRow: View {
                 HStack {
                     if unknown {
                         Text("Unknown – no recent data")
-                    } else if stale, let asOf {
+                    } else if stale, let asOf = window.asOf ?? asOf {
                         // Reset times stay valid even when the usage numbers are old.
                         HStack(spacing: 4) {
                             ResetText(date: window.resetsAt, notStarted: window.resetsAt == nil && window.usedFraction == 0, now: now)

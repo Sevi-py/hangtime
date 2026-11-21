@@ -87,6 +87,8 @@ public struct UsageWindow: Codable, Hashable, Identifiable, Sendable {
     public var isStale: Bool?
     /// Extra context, e.g. "Up to 50% of weekly · 22% of weekly used".
     public var note: String?
+    /// When this window's numbers were read, if it differs from the snapshot's `dataAsOf`.
+    public var asOf: Date?
 
     public init(id: String, kind: WindowKind, title: String, scope: String? = nil,
                 usedFraction: Double, resetsAt: Date?, duration: TimeInterval?) {
