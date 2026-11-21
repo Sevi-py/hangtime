@@ -3,12 +3,20 @@ import SwiftUI
 struct MenuContentView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.openWindow) private var openWindow
+    @State private var contentHeight: CGFloat = 300
+
+    /// MenuBarExtra windows don't give a ScrollView any height of its own, so we measure the
+    /// content and size the scroll area explicitly (capped to the screen).
+    private var maxScrollHeight: CGFloat {
+        let screen = NSScreen.main?.visibleFrame.height ?? 900
+        return max(300, screen - 260)
+    }
 
     var body: some View {
         let s = model.settings
         VStack(spacing: 0) {
             header
-            Divider().opacity(0.5)
             ScrollView {
                 VStack(spacing: 10) {
                     if model.visibleProviders.isEmpty {
@@ -21,16 +29,19 @@ struct MenuContentView: View {
                         HistoryCard()
                     }
                 }
-                .padding(12)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
             }
             .scrollBounceBehavior(.basedOnSize)
-            .frame(maxHeight: 640)
+            .frame(height: min(contentHeight, maxScrollHeight))
             if let toast = model.toast {
                 ToastBar(text: toast) { model.toast = nil }
             }
-            Divider().opacity(0.5)
-            footer
+            MenuDivider()
+            menuRows
         }
+        .padding(.bottom, 5)
         .frame(width: 360)
         .onAppear {
             SettingsOpener.action = openSettings
@@ -45,47 +56,52 @@ struct MenuContentView: View {
             Text("Usage")
                 .font(.headline)
             Spacer()
-            Button {
-                Task { await model.refreshAll(includeHistory: true) }
-            } label: {
-                if model.isRefreshing {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Image(systemName: "arrow.clockwise")
-                }
-            }
-            .buttonStyle(.borderless)
-            .help("Refresh now")
-            .keyboardShortcut("r")
-            .frame(width: 20)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-    }
-
-    private var footer: some View {
-        HStack {
             if let last = model.lastRefresh {
                 TimelineView(.periodic(from: .now, by: 30)) { _ in
-                    Text("Updated \(last.formatted(.relative(presentation: .named)))")
+                    Text(model.isRefreshing ? "Updating…" : "Updated \(last.formatted(.relative(presentation: .named)))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-            } else {
-                Text("Loading…")
             }
-            Spacer()
-            Button("Settings…") {
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
+    }
+
+    @ViewBuilder
+    private var menuRows: some View {
+        @Bindable var s = model.settings
+        VStack(spacing: 0) {
+            MenuRow(title: "Refresh Now", systemImage: "arrow.clockwise", shortcut: "⌘R", busy: model.isRefreshing) {
+                Task { await model.refreshAll(includeHistory: true) }
+            }
+            .keyboardShortcut("r")
+            MenuRow(title: "Dashboard", systemImage: "chart.bar.xaxis", shortcut: "⌘D") {
+                NSApp.activate()
+                openWindow(id: "dashboard")
+            }
+            .keyboardShortcut("d")
+            MenuDivider()
+            MenuRow(title: "Open at Login", systemImage: "power", checked: model.launchAtLogin) {
+                model.setLaunchAtLogin(!model.launchAtLogin)
+            }
+            MenuRow(title: "Settings…", systemImage: "gearshape", shortcut: "⌘,") {
                 SettingsOpener.action = openSettings
                 SettingsOpener.open()
             }
             .keyboardShortcut(",")
-            Button("Quit") { NSApp.terminate(nil) }
-                .keyboardShortcut("q")
+            MenuRow(title: "About Headroom", systemImage: "info.circle") {
+                NSApp.activate()
+                NSApp.orderFrontStandardAboutPanel(nil)
+            }
+            MenuDivider()
+            MenuRow(title: "Quit Headroom", systemImage: "rectangle.portrait.and.arrow.right", shortcut: "⌘Q") {
+                NSApp.terminate(nil)
+            }
+            .keyboardShortcut("q")
         }
-        .buttonStyle(.borderless)
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 5)
     }
 
     private var emptyState: some View {
@@ -102,6 +118,53 @@ struct MenuContentView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
+    }
+}
+
+/// A row that looks and behaves like a native menu item (hover highlight, checkmark, shortcut hint).
+struct MenuRow: View {
+    var title: String
+    var systemImage: String
+    var shortcut: String? = nil
+    var checked: Bool? = nil
+    var busy: Bool = false
+    var action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Group {
+                    if busy { ProgressView().controlSize(.mini) } else { Image(systemName: systemImage) }
+                }
+                .frame(width: 16)
+                .foregroundStyle(hovering ? .white : .secondary)
+                Text(title)
+                Spacer()
+                if let checked {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.semibold))
+                        .opacity(checked ? 1 : 0)
+                }
+                if let shortcut {
+                    Text(shortcut).foregroundStyle(hovering ? .white.opacity(0.8) : .secondary)
+                }
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(hovering ? .white : .primary)
+            .padding(.horizontal, 9)
+            .frame(height: 24)
+            .background(hovering ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+    }
+}
+
+struct MenuDivider: View {
+    var body: some View {
+        Divider().padding(.horizontal, 14).padding(.vertical, 5)
     }
 }
 
@@ -358,7 +421,7 @@ struct HistoryCard: View {
                 }
                 if s.popoverShowsHeatmap {
                     ActivityHeatmap(totals: model.history.dailyTotals(metric: metric, providers: providers),
-                                    weeks: 19, tint: .green, spacing: 2.5, metric: metric)
+                                    weeks: 19, spacing: 2.5, metric: metric)
                         .frame(height: 100)
                 }
                 Text("Source: \(model.history.source.rawValue)\(metric == .cost ? " · API-equivalent estimate" : "")")

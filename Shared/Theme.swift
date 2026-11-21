@@ -1,11 +1,16 @@
 import SwiftUI
+import AppKit
 
 public extension ProviderID {
     var tint: Color {
         switch self {
         case .claude: Color(red: 0.85, green: 0.47, blue: 0.34)
-        case .codex: Color(red: 0.20, green: 0.62, blue: 0.52)
-        case .grok: Color(red: 0.42, green: 0.48, blue: 0.95)
+        case .codex: Color(red: 0.30, green: 0.38, blue: 1.0)
+        // Grok's brand is monochrome: near-black in light mode, near-white in dark mode.
+        case .grok: Color(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                ? NSColor(white: 0.88, alpha: 1) : NSColor(white: 0.18, alpha: 1)
+        })
         }
     }
 }
@@ -87,5 +92,25 @@ public enum Fmt {
         ]
         if let k = known[raw.lowercased()] { return k }
         return raw.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+}
+
+/// Heatmap colors (deliberately not GitHub green by default).
+public enum HeatmapPalette: String, CaseIterable, Identifiable, Sendable {
+    case violet, blue, orange, pink, teal, graphite
+    public var id: String { rawValue }
+    public var title: String { rawValue.capitalized }
+    public var color: Color {
+        switch self {
+        case .violet: Color(red: 0.49, green: 0.36, blue: 0.96)
+        case .blue: Color(red: 0.20, green: 0.48, blue: 1.0)
+        case .orange: Color(red: 0.95, green: 0.50, blue: 0.20)
+        case .pink: Color(red: 0.93, green: 0.30, blue: 0.55)
+        case .teal: Color(red: 0.10, green: 0.66, blue: 0.70)
+        case .graphite: Color.primary
+        }
+    }
+    public static var current: HeatmapPalette {
+        HeatmapPalette(rawValue: SharedStore.defaults.string(forKey: SharedStore.Key.heatmapPalette) ?? "") ?? .violet
     }
 }

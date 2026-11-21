@@ -19,6 +19,8 @@ enum DebugRenderer {
             let suffix = dark ? "dark" : "light"
             await snap(AnyView(MenuContentView().environment(model)), size: nil, dark: dark,
                        to: out.appendingPathComponent("panel-\(suffix).png"))
+            await snap(AnyView(DashboardView().environment(model)), size: CGSize(width: 860, height: 1300), dark: dark,
+                       to: out.appendingPathComponent("dashboard-\(suffix).png"))
             await snap(AnyView(SettingsView().environment(model)), size: nil, dark: dark,
                        to: out.appendingPathComponent("settings-\(suffix).png"))
             let widgets: [(String, CGSize, AnyView)] = [
@@ -51,7 +53,7 @@ enum DebugRenderer {
         window.contentView = host
         window.setFrameOrigin(NSPoint(x: -10000, y: -10000))
         window.orderFrontRegardless()
-        try? await Task.sleep(for: .milliseconds(600))
+        try? await Task.sleep(for: .milliseconds(1200))
         host.layoutSubtreeIfNeeded()
         guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
         host.cacheDisplay(in: host.bounds, to: rep)

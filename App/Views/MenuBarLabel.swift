@@ -54,14 +54,15 @@ private struct LabelContent: View {
                 case .perProvider:
                     ForEach(items, id: \.0) { item in
                         HStack(spacing: 3) {
-                            Image(systemName: item.0.symbol).font(.system(size: 10, weight: .bold))
+                            Image(item.0.logo).renderingMode(.template).resizable().aspectRatio(contentMode: .fit)
+                                .frame(width: 13, height: 13)
                             if item.2 { warn } else if let w = item.1 { text(w) } else { Text("–") }
                         }
                     }
                 case .rings, .iconOnly:
                     ForEach(items, id: \.0) { item in
                         MiniRing(remaining: item.1?.remainingFraction ?? 0, pace: item.1?.evenPaceRemaining(),
-                                 symbol: item.0.symbol, problem: item.2)
+                                 logo: item.0.logo, problem: item.2)
                     }
                 }
             }
@@ -89,7 +90,7 @@ private struct LabelContent: View {
 private struct MiniRing: View {
     var remaining: Double
     var pace: Double?
-    var symbol: String
+    var logo: String
     var problem: Bool
 
     var body: some View {
@@ -98,8 +99,11 @@ private struct MiniRing: View {
             Circle().trim(from: 0, to: remaining)
                 .stroke(.black, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            Image(systemName: problem ? "exclamationmark" : symbol)
-                .font(.system(size: 6.5, weight: .heavy))
+            if problem {
+                Image(systemName: "exclamationmark").font(.system(size: 6.5, weight: .heavy))
+            } else {
+                Image(logo).renderingMode(.template).resizable().aspectRatio(contentMode: .fit).frame(width: 7.5, height: 7.5)
+            }
         }
         .frame(width: 15, height: 15)
     }

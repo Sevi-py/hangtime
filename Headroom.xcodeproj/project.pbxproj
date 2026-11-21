@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05C5FEFC6D56904025FF744F /* Brand.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D3D62702CB18920B7289198 /* Brand.xcassets */; };
 		06C125D42A61E1AFEA41D19D /* Pricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D67398E0AC0A886CA5B362 /* Pricing.swift */; };
 		09276D864B596654C95A2B71 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57702B6862296A94EABCE4AE /* WidgetKit.framework */; };
 		16FB06DF9B18139A08424FC5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B70786DC4283C38D892754 /* Components.swift */; };
@@ -38,6 +39,8 @@
 		D9B5B4651B64CE1D5096848C /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B70786DC4283C38D892754 /* Components.swift */; };
 		D9EC4B9CDF1AF118B7294ED6 /* UsageWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FBF52279851A81AE1A9C5D /* UsageWidgets.swift */; };
 		DA0E7A8B6A30DAFB33D07318 /* DarwinNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = D899D01E46DAC3123C6DF374 /* DarwinNotify.swift */; };
+		DDEEB193586B21E5656584B3 /* Brand.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D3D62702CB18920B7289198 /* Brand.xcassets */; };
+		ECFB7FCFAEADC739D173BDBA /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90CA06E4F606D8BCE93053DB /* DashboardView.swift */; };
 		F3436D6E1D6F047E73C7DA5B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CFB1A32DC9BB186D6340F6A /* SwiftUI.framework */; };
 		F53F677E8677A5508A024FD7 /* UsageControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934328B58A20CE3D98264708 /* UsageControls.swift */; };
 		FA923BF3B01C86536C25D810 /* JSONRPCProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19D1E81DBAE4D3CB5FB6DB03 /* JSONRPCProcess.swift */; };
@@ -84,6 +87,7 @@
 		268CE1E0E7F22C80718BBC0F /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		26B70786DC4283C38D892754 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		2CFB1A32DC9BB186D6340F6A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		2D3D62702CB18920B7289198 /* Brand.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Brand.xcassets; sourceTree = "<group>"; };
 		36D67398E0AC0A886CA5B362 /* Pricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pricing.swift; sourceTree = "<group>"; };
 		4782D79EC07DE70C6C2F0405 /* CodexProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexProvider.swift; sourceTree = "<group>"; };
 		51F6567CADF45BC749319E9E /* MenuContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuContentView.swift; sourceTree = "<group>"; };
@@ -93,6 +97,7 @@
 		5B3D491D8D8B855C6182DF43 /* HeadroomWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HeadroomWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		711AD10CAEC8CC5D1F88DBDA /* LocalLogHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLogHistory.swift; sourceTree = "<group>"; };
 		78EF3A16EB5CBF0FF581F51C /* GrokProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokProvider.swift; sourceTree = "<group>"; };
+		90CA06E4F606D8BCE93053DB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		934328B58A20CE3D98264708 /* UsageControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageControls.swift; sourceTree = "<group>"; };
 		9D2BE599D044CDAB1F08D7AC /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		C1A642B110FFF889AEF96702 /* ClaudeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeProvider.swift; sourceTree = "<group>"; };
@@ -166,6 +171,7 @@
 		6624C77843F9E671906A69EE /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				90CA06E4F606D8BCE93053DB /* DashboardView.swift */,
 				17270CFBAB1B588BB85B45D7 /* MenuBarLabel.swift */,
 				51F6567CADF45BC749319E9E /* MenuContentView.swift */,
 				14DC34DC04563D1C1363B36E /* SettingsView.swift */,
@@ -176,6 +182,7 @@
 		6E68EE23400BC0F083FB86CD /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				2D3D62702CB18920B7289198 /* Brand.xcassets */,
 				26B70786DC4283C38D892754 /* Components.swift */,
 				D899D01E46DAC3123C6DF374 /* DarwinNotify.swift */,
 				268CE1E0E7F22C80718BBC0F /* Models.swift */,
@@ -275,6 +282,7 @@
 			buildConfigurationList = 657FD5541FA88725B55B96C7 /* Build configuration list for PBXNativeTarget "HeadroomWidgets" */;
 			buildPhases = (
 				EE1C36BFA86759BE6AF96112 /* Sources */,
+				B2CF8C53FD13F05C70777545 /* Resources */,
 				C08206B3A1AEEF9026C89EE1 /* Frameworks */,
 			);
 			buildRules = (
@@ -328,11 +336,20 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B2CF8C53FD13F05C70777545 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				05C5FEFC6D56904025FF744F /* Brand.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5B60506CE511B37E1A6269B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				5E45CC6BEDEA922E491A7D73 /* Assets.xcassets in Resources */,
+				DDEEB193586B21E5656584B3 /* Brand.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -348,6 +365,7 @@
 				7C1438B5A472C1A88A2A5266 /* CodexProvider.swift in Sources */,
 				16FB06DF9B18139A08424FC5 /* Components.swift in Sources */,
 				DA0E7A8B6A30DAFB33D07318 /* DarwinNotify.swift in Sources */,
+				ECFB7FCFAEADC739D173BDBA /* DashboardView.swift in Sources */,
 				BDE7D13551F2B094F5BA08D4 /* GrokProvider.swift in Sources */,
 				2974EEA1C928B199B6B4DCED /* HeadroomApp.swift in Sources */,
 				FA923BF3B01C86536C25D810 /* JSONRPCProcess.swift in Sources */,

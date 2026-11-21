@@ -16,6 +16,12 @@ struct HeadroomApp: App {
         }
         .menuBarExtraStyle(.window)
 
+        Window("Dashboard", id: "dashboard") {
+            DashboardView()
+                .environment(model)
+        }
+        .defaultSize(width: 860, height: 760)
+
         Settings {
             SettingsView()
                 .environment(model)

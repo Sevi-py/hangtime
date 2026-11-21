@@ -351,7 +351,7 @@ struct HeatmapWidgetView: View {
         case .systemLarge: 22
         default: 48
         }
-        let tint: Color = config.providerColor && !config.allProviders ? single.tint : .green
+        let tint: Color = config.providerColor && !config.allProviders ? single.tint : HeatmapPalette.current.color
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Activity").font(.system(size: 13, weight: .semibold))

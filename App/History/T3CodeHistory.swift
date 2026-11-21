@@ -4,6 +4,11 @@ import Security
 /// Reads usage from T3 Code's local server (`server.getUsageSummary` over its WebSocket RPC).
 /// T3 Code already scans every provider's history, prices it, and de-duplicates sources, so when it
 /// is installed and running it's the most complete source.
+enum T3AccessState: Equatable {
+    case unknown, notInstalled, none, revoked, invalid
+    case granted(expires: Date?, lastUsed: Date?)
+}
+
 enum T3CodeHistory {
     static let userData = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".t3/userdata")
 
@@ -58,24 +63,78 @@ enum T3CodeHistory {
         SecItemAdd(add as CFDictionary, nil)
     }
 
+    static var revokedByUser: Bool { UserDefaults.standard.bool(forKey: "t3AccessRevoked") }
+    private static var sessionID: String? {
+        get { UserDefaults.standard.string(forKey: "t3SessionID") }
+        set { UserDefaults.standard.set(newValue, forKey: "t3SessionID") }
+    }
+
+    /// Issues a read-only (`diagnostics:read`) bearer session for Headroom and stores it in the Keychain.
+    /// If a previous Headroom session exists, it is revoked afterwards so they don't pile up.
     static func issueToken(command: String = "t3") async throws -> String {
         let r = try await Shell.shared.runCLI(command, ["auth", "session", "issue", "--scope", "diagnostics:read",
-                                                        "--ttl", "90d", "--label", "Headroom", "--token-only"], timeout: 30)
-        let token = r.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(separator: "\n").last.map(String.init) ?? ""
-        guard r.ok, !token.isEmpty, !token.contains(" ") else {
-            throw T3Error.noToken((r.stderr + r.stdout).trimmingCharacters(in: .whitespacesAndNewlines))
+                                                        "--ttl", "90d", "--label", "Headroom", "--json"], timeout: 30)
+        guard r.ok, let o = JSON.object(r.stdout), let token = JSON.string(o["token"]), !token.isEmpty else {
+            let msg = (r.stderr + r.stdout).trimmingCharacters(in: .whitespacesAndNewlines)
+            throw T3Error.noToken(msg.isEmpty ? "Is T3 Code installed and has it been opened once?" : String(msg.prefix(200)))
         }
+        let old = sessionID
         store(token: token)
+        sessionID = JSON.string(o["sessionId"])
+        if let old, old != sessionID {
+            _ = try? await Shell.shared.runCLI(command, ["auth", "session", "revoke", old], timeout: 20)
+        }
         return token
+    }
+
+    static func revoke(command: String = "t3") async {
+        var ids = Set<String>()
+        if let id = sessionID { ids.insert(id) }
+        // Also clean up any other Headroom sessions (e.g. from an older install).
+        for sess in await sessions(command: command) where JSON.string((sess["client"] as? [String: Any])?["label"]) == "Headroom" {
+            if let id = JSON.string(sess["sessionId"]) { ids.insert(id) }
+        }
+        for id in ids { _ = try? await Shell.shared.runCLI(command, ["auth", "session", "revoke", id], timeout: 20) }
+        store(token: nil)
+        sessionID = nil
+    }
+
+    static func sessions(command: String = "t3") async -> [[String: Any]] {
+        guard let r = try? await Shell.shared.runCLI(command, ["auth", "session", "list", "--json"], timeout: 20), r.ok,
+              let data = r.stdout.data(using: .utf8),
+              let arr = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] else { return [] }
+        return arr
+    }
+
+    static func accessState(command: String = "t3") async -> T3AccessState {
+        guard isInstalled else { return .notInstalled }
+        guard storedToken() != nil else { return revokedByUser ? .revoked : .none }
+        let all = await sessions(command: command)
+        var match = all.first(where: { JSON.string($0["sessionId"]) == sessionID })
+        if match == nil, sessionID == nil {
+            // Token issued before we tracked the session id: adopt the newest "Headroom" session.
+            match = all.filter { JSON.string(($0["client"] as? [String: Any])?["label"]) == "Headroom" }
+                .max { (JSON.date($0["issuedAt"]) ?? .distantPast) < (JSON.date($1["issuedAt"]) ?? .distantPast) }
+            if let id = match.flatMap({ JSON.string($0["sessionId"]) }) { sessionID = id }
+        }
+        guard let mine = match else {
+            // Token exists but T3 no longer knows the session (revoked in T3 or data reset).
+            return all.isEmpty ? .granted(expires: nil, lastUsed: nil) : .invalid
+        }
+        return .granted(expires: JSON.date(mine["expiresAt"]), lastUsed: JSON.date(mine["lastConnectedAt"]))
     }
 
     // MARK: Query
 
     static func load(days: Int = 366) async throws -> [DailyUsage] {
+        guard !revokedByUser else { throw T3Error.noToken("Access was turned off in Settings") }
         guard let url = endpoint() else { throw T3Error.notRunning }
         var token = storedToken()
         if token == nil { token = try await issueToken() }
+        // Renew quietly when the session is about to expire.
+        if case .granted(let exp?, _) = await accessState(), exp.timeIntervalSinceNow < 7 * 86400 {
+            token = (try? await issueToken()) ?? token
+        }
         do {
             return try await summary(url: url, token: token!, days: days)
         } catch T3Error.rpc(let m) where m.contains("401") || m.lowercased().contains("unauthor") || m.lowercased().contains("scope") {

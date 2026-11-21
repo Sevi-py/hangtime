@@ -27,11 +27,13 @@ public struct LimitBar: View {
                     .fill(color.gradient)
                     .frame(width: max(remaining > 0 ? height : 0, w * remaining))
                 if let pace {
-                    RoundedRectangle(cornerRadius: 1)
-                        .fill(.primary.opacity(0.85))
-                        .frame(width: 2, height: height + 6)
-                        .offset(x: min(max(w * pace - 1, 0), w - 2))
-                        .shadow(color: .black.opacity(0.25), radius: 0.5)
+                    // Outlined so it stays visible on any bar color (incl. Grok's near-black/near-white).
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(.primary)
+                        .frame(width: 2.5, height: height + 6)
+                        .overlay(RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color(nsColor: .windowBackgroundColor), lineWidth: 0.75)
+                            .padding(-0.75))
+                        .offset(x: min(max(w * pace - 1.25, 0), w - 2.5))
                 }
             }
             .frame(height: height + 6)
@@ -88,6 +90,7 @@ public struct RingGauge: View {
                     let angle = Angle.degrees(360 * pace - 90)
                     Capsule()
                         .fill(.primary)
+                        .overlay(Capsule().strokeBorder(Color(nsColor: .windowBackgroundColor), lineWidth: 0.75).padding(-0.75))
                         .frame(width: 2.5, height: lineWidth + 5)
                         .rotationEffect(angle + .degrees(90))
                         .position(x: geo.size.width / 2 + r * cos(angle.radians),
@@ -180,14 +183,18 @@ public struct ProviderGlyph: View {
     }
 
     public var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-            .fill(provider.tint.gradient)
-            .frame(width: size, height: size)
-            .overlay {
-                Image(systemName: provider.symbol)
-                    .font(.system(size: size * 0.52, weight: .bold))
-                    .foregroundStyle(.white)
+        Group {
+            switch provider {
+            case .claude:
+                Image(provider.logo).renderingMode(.template).resizable().foregroundStyle(provider.tint)
+            case .codex, .grok:
+                // OpenAI's and xAI's marks are monochrome: black on light backgrounds, white on dark.
+                Image(provider.logo).renderingMode(.template).resizable().foregroundStyle(.primary)
             }
+        }
+        .aspectRatio(contentMode: .fit)
+        .frame(width: size, height: size)
+        .accessibilityLabel(provider.displayName)
     }
 }
 
@@ -202,7 +209,7 @@ public struct ActivityHeatmap: View {
     public var metric: UsageHistory.Metric
     public var now: Date
 
-    public init(totals: [String: Double], weeks: Int, tint: Color = .green, spacing: CGFloat = 3,
+    public init(totals: [String: Double], weeks: Int, tint: Color = HeatmapPalette.current.color, spacing: CGFloat = 3,
                 showLabels: Bool = true, metric: UsageHistory.Metric = .tokens, now: Date = .now) {
         self.totals = totals
         self.weeks = weeks

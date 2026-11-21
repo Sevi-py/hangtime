@@ -19,20 +19,12 @@ struct SettingsView: View {
 
 private struct GeneralSettings: View {
     @Environment(AppModel.self) private var model
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
         @Bindable var s = model.settings
         Form {
             Section {
-                Toggle("Open at login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { _, on in
-                        do {
-                            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-                        } catch {
-                            launchAtLogin = SMAppService.mainApp.status == .enabled
-                        }
-                    }
+                Toggle("Open at login", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
             }
             Section("Refreshing") {
                 Picker("Check usage every", selection: $s.refreshMinutes) {
@@ -246,6 +238,7 @@ private struct AppearanceSettings: View {
             Section("Usage panel") {
                 Toggle("Show daily chart", isOn: $s.popoverShowsChart)
                 Toggle("Show activity heatmap", isOn: $s.popoverShowsHeatmap)
+                HeatmapColorPicker()
             }
         }
         .formStyle(.grouped)
@@ -310,16 +303,12 @@ private struct HistorySettings: View {
                     ForEach(HistorySourcePreference.allCases) { Text($0.title).tag($0) }
                 }
                 .onChange(of: s.historySource) { Task { await model.reloadHistory() } }
-                LabeledContent("T3 Code") {
-                    Label(model.t3Installed ? "Installed" : "Not installed",
-                          systemImage: model.t3Installed ? "checkmark.circle.fill" : "minus.circle")
-                        .foregroundStyle(model.t3Installed ? .green : .secondary)
-                }
                 LabeledContent("Currently using", value: model.history.source.rawValue)
             } footer: {
                 Text("Automatic uses T3 Code's usage records (all environments) when it's installed and falls back to the CLIs' local session logs.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            T3AccessSection()
             Section("Charts") {
                 Picker("Show", selection: $s.historyMetric) {
                     ForEach(UsageHistory.Metric.allCases) { Text($0.title).tag($0) }
@@ -344,6 +333,84 @@ private struct HistorySettings: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: 400)
+        .frame(height: 520)
+    }
+}
+
+/// Lets the user grant / renew / revoke Headroom's read-only access to T3 Code without a terminal.
+private struct T3AccessSection: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let busy = model.busy.contains("t3")
+        Section {
+            LabeledContent("Status") {
+                switch model.t3Access {
+                case .unknown:
+                    ProgressView().controlSize(.small)
+                case .notInstalled:
+                    Label("T3 Code not installed", systemImage: "minus.circle").foregroundStyle(.secondary)
+                case .none:
+                    Label("Not connected", systemImage: "circle.dashed").foregroundStyle(.secondary)
+                case .revoked:
+                    Label("Access turned off", systemImage: "nosign").foregroundStyle(.secondary)
+                case .invalid:
+                    Label("Access was revoked in T3 Code", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                case .granted(let exp, let used):
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Label("Connected", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                        if let exp { Text("Renews automatically · expires \(exp.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary) }
+                        if let used { Text("Last used \(used.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }
+                    }
+                }
+            }
+            if model.t3Access != .notInstalled {
+                HStack {
+                    if busy { ProgressView().controlSize(.small) }
+                    Spacer()
+                    switch model.t3Access {
+                    case .granted:
+                        Button("Revoke Access", role: .destructive) { Task { await model.revokeT3Access() } }
+                        Button("Renew") { Task { await model.grantT3Access() } }
+                    case .unknown:
+                        EmptyView()
+                    default:
+                        Button("Connect to T3 Code") { Task { await model.grantT3Access() } }
+                            .buttonStyle(.borderedProminent)
+                    }
+                }
+                .disabled(busy)
+            }
+        } header: {
+            Text("T3 Code access")
+        } footer: {
+            Text("Headroom uses a read-only T3 Code session (usage statistics only) to read your usage across providers. It shows up as “Headroom” under Sharing & access in T3 Code.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .task { await model.refreshT3Access() }
+    }
+}
+
+private struct HeatmapColorPicker: View {
+    @Environment(AppModel.self) private var model
+    @AppStorage(SharedStore.Key.heatmapPalette, store: SharedStore.defaults) private var palette = HeatmapPalette.violet.rawValue
+
+    var body: some View {
+        LabeledContent("Heatmap color") {
+            HStack(spacing: 8) {
+                ForEach(HeatmapPalette.allCases) { p in
+                    Button {
+                        palette = p.rawValue
+                        model.publish()
+                    } label: {
+                        Circle().fill(p.color.gradient)
+                            .frame(width: 16, height: 16)
+                            .overlay(Circle().strokeBorder(.primary.opacity(palette == p.rawValue ? 0.9 : 0), lineWidth: 2).padding(-3))
+                    }
+                    .buttonStyle(.plain)
+                    .help(p.title)
+                }
+            }
+        }
     }
 }

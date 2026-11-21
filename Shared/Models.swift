@@ -32,6 +32,9 @@ public enum ProviderID: String, Codable, CaseIterable, Identifiable, Hashable, S
         }
     }
 
+    /// Brand mark in Brand.xcassets (template image).
+    public var logo: String { "logo-\(rawValue)" }
+
     /// SF Symbol used when no brand glyph is available.
     public var symbol: String {
         switch self {

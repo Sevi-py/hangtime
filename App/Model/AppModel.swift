@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 import WidgetKit
 import UserNotifications
+import ServiceManagement
 
 enum InstallState: Equatable {
     case unknown, installed(version: String?), missing
@@ -24,6 +25,8 @@ final class AppModel {
     var lastRefresh: Date?
     var busy: Set<String> = []          // ids of in-flight actions (login, redeem)
     var toast: String?
+    var launchAtLogin = SMAppService.mainApp.status == .enabled
+    var t3Access = T3AccessState.unknown
 
     private var timer: Timer?
     private var lastHistoryLoad: Date?
@@ -51,6 +54,12 @@ final class AppModel {
     // MARK: Lifecycle
 
     func start() {
+        // Open at login by default (once); the user can turn it off from the panel or Settings.
+        if !UserDefaults.standard.bool(forKey: "didConfigureLoginItem") {
+            UserDefaults.standard.set(true, forKey: "didConfigureLoginItem")
+            setLaunchAtLogin(true)
+        }
+        launchAtLogin = SMAppService.mainApp.status == .enabled
         Task { await refreshAll(includeHistory: true) }
         scheduleTimer()
         DarwinNotify.observe(DarwinNotify.refresh) {
@@ -160,6 +169,44 @@ final class AppModel {
     }
 
     // MARK: Actions
+
+    func setLaunchAtLogin(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        } catch {
+            toast = "Couldn't change login item: \(error.localizedDescription)"
+        }
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+
+    // MARK: T3 Code access
+
+    func refreshT3Access() async {
+        t3Access = await T3CodeHistory.accessState()
+    }
+
+    func grantT3Access() async {
+        busy.insert("t3")
+        defer { busy.remove("t3") }
+        do {
+            UserDefaults.standard.set(false, forKey: "t3AccessRevoked")
+            _ = try await T3CodeHistory.issueToken()
+            toast = "T3 Code access granted"
+        } catch {
+            toast = error.localizedDescription
+        }
+        await refreshT3Access()
+        await reloadHistory()
+    }
+
+    func revokeT3Access() async {
+        busy.insert("t3")
+        defer { busy.remove("t3") }
+        await T3CodeHistory.revoke()
+        UserDefaults.standard.set(true, forKey: "t3AccessRevoked")
+        await refreshT3Access()
+        await reloadHistory()
+    }
 
     func login(_ p: ProviderID) async {
         let key = "login.\(p.rawValue)"
