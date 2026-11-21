@@ -29,6 +29,7 @@ struct DashboardView: View {
             .padding(20)
         }
         .frame(minWidth: 720, minHeight: 560)
+        .environment(\.headroomAnimates, true)
         .background(.background)
         .toolbar {
             ToolbarItemGroup {

@@ -4,6 +4,7 @@ struct MenuContentView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismiss) private var dismiss
     @State private var contentHeight: CGFloat = 300
 
     /// MenuBarExtra windows don't give a ScrollView any height of its own, so we measure the
@@ -43,6 +44,7 @@ struct MenuContentView: View {
         }
         .padding(.bottom, 5)
         .frame(width: 360)
+        .environment(\.headroomAnimates, true)
         .onAppear {
             SettingsOpener.action = openSettings
             if (model.lastRefresh.map { Date.now.timeIntervalSince($0) > 60 } ?? true) {
@@ -57,11 +59,16 @@ struct MenuContentView: View {
                 .font(.headline)
             Spacer()
             if let last = model.lastRefresh {
-                TimelineView(.periodic(from: .now, by: 30)) { _ in
-                    Text(model.isRefreshing ? "Updating…" : "Updated \(last.formatted(.relative(presentation: .named)))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                Group {
+                    if model.isRefreshing {
+                        Text("Updating…")
+                    } else {
+                        Text("Updated \(Text(last, style: .relative)) ago")
+                    }
                 }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .contentTransition(.opacity)
             }
         }
         .padding(.horizontal, 14)
@@ -78,23 +85,17 @@ struct MenuContentView: View {
             }
             .keyboardShortcut("r")
             MenuRow(title: "Dashboard", systemImage: "chart.bar.xaxis", shortcut: "⌘D") {
+                dismiss()
                 NSApp.activate()
                 openWindow(id: "dashboard")
             }
             .keyboardShortcut("d")
-            MenuDivider()
-            MenuRow(title: "Open at Login", systemImage: "power", checked: model.launchAtLogin) {
-                model.setLaunchAtLogin(!model.launchAtLogin)
-            }
             MenuRow(title: "Settings…", systemImage: "gearshape", shortcut: "⌘,") {
+                dismiss()
                 SettingsOpener.action = openSettings
                 SettingsOpener.open()
             }
             .keyboardShortcut(",")
-            MenuRow(title: "About Headroom", systemImage: "info.circle") {
-                NSApp.activate()
-                NSApp.orderFrontStandardAboutPanel(nil)
-            }
             MenuDivider()
             MenuRow(title: "Quit Headroom", systemImage: "rectangle.portrait.and.arrow.right", shortcut: "⌘Q") {
                 NSApp.terminate(nil)
@@ -211,6 +212,12 @@ struct ProviderCard: View {
                 windows(s)
             }
 
+            if let reason = snapshot?.staleReason {
+                Label(reason, systemImage: "clock.badge.exclamationmark")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             if let notes = snapshot?.notes, !notes.isEmpty {
                 ForEach(notes, id: \.self) { n in
                     Text(n).font(.caption).foregroundStyle(.secondary)
@@ -238,7 +245,7 @@ struct ProviderCard: View {
                 ForEach(windows) { w in
                     VStack(alignment: .leading, spacing: 4) {
                         WindowRow(window: w, provider: provider, showPace: s.showPaceMarker,
-                                  colorByProvider: s.colorByProvider, now: ctx.date)
+                                  colorByProvider: s.colorByProvider, now: ctx.date, asOf: snapshot?.dataAsOf)
                         if w.isExhausted || Notifier.shared.isArmed(provider, w) {
                             ResetAlertToggle(provider: provider, window: w)
                         }
@@ -314,7 +321,7 @@ struct BankedResetsSection: View {
                     Text("\(snapshot.availableResetCount) banked reset\(snapshot.availableResetCount == 1 ? "" : "s")")
                         .font(.callout.weight(.medium))
                     if let soonest = snapshot.bankedResets.compactMap(\.expiresAt).min() {
-                        Text("· \(Fmt.expires(soonest).lowercased())")
+                        Text("· " + Fmt.expires(soonest).lowercased())
                             .font(.caption).foregroundStyle(soonest.timeIntervalSinceNow < 3 * 86400 ? .orange : .secondary)
                     }
                     Spacer()
@@ -345,7 +352,7 @@ struct BankedResetsSection: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(r?.title ?? "Rate limit reset").font(.callout)
                 if let detail = r?.detail { Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
-                Text(Fmt.expires(r?.expiresAt))
+                ExpiryText(r?.expiresAt)
                     .font(.caption)
                     .foregroundStyle((r?.expiresAt?.timeIntervalSinceNow ?? .infinity) < 3 * 86400 ? .orange : .secondary)
             }
@@ -365,7 +372,7 @@ struct BankedResetsSection: View {
                     }
                     .controlSize(.small)
                 } else {
-                    Button("Use…") {
+                    Button("Use Reset") {
                         if model.settings.confirmBeforeRedeem { confirming = key }
                         else { Task { await model.redeem(provider, reset: r) } }
                     }

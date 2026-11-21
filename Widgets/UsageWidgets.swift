@@ -162,7 +162,7 @@ struct ProviderLimitsWidget: Widget {
         }
         .configurationDisplayName("Provider Limits")
         .description("Session, weekly and model limits for one CLI.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
@@ -187,7 +187,7 @@ struct SingleGaugeView: View {
                           color: Theme.color(for: w, provider: pid, byProvider: globalByProvider),
                           lineWidth: 10, label: w.scope ?? (w.kind == .session ? "Session" : w.kind == .weekly ? "Weekly" : w.title))
                 if let r = w.resetsAt {
-                    Text(Fmt.resets(r, now: entry.date)).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
+                    ResetText(date: r, now: entry.date).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
         } else {
@@ -381,7 +381,7 @@ struct HeatmapWidget: Widget {
         }
         .configurationDisplayName("Activity")
         .description("A contribution-style heatmap of your usage.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 

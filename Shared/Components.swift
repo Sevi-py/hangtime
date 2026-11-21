@@ -5,7 +5,13 @@ import Charts
 
 /// Horizontal capsule that shows what's *left*. A small tick marks where you would be
 /// if you had used the limit perfectly evenly.
+public extension EnvironmentValues {
+    /// Animate value changes (only in the open panel and the Dashboard, not in widgets).
+    @Entry var headroomAnimates: Bool = false
+}
+
 public struct LimitBar: View {
+    @Environment(\.headroomAnimates) private var animates
     public var remaining: Double
     public var pace: Double?
     public var color: Color
@@ -39,6 +45,8 @@ public struct LimitBar: View {
             .frame(height: height + 6)
         }
         .frame(height: height + 6)
+        .animation(animates ? .smooth(duration: 0.7) : nil, value: remaining)
+        .animation(animates ? .smooth(duration: 0.7) : nil, value: pace)
         .accessibilityElement()
         .accessibilityLabel("\(Fmt.percent(remaining)) left")
     }
@@ -47,6 +55,7 @@ public struct LimitBar: View {
 // MARK: - Ring gauge
 
 public struct RingGauge: View {
+    @Environment(\.headroomAnimates) private var animates
     public var remaining: Double
     public var pace: Double?
     public var color: Color
@@ -73,6 +82,7 @@ public struct RingGauge: View {
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .monospacedDigit()
                     .minimumScaleFactor(0.5)
+                    .contentTransition(animates ? .numericText(value: remaining) : .identity)
                 if let label {
                     Text(label)
                         .font(.system(size: 9, weight: .medium))
@@ -99,6 +109,61 @@ public struct RingGauge: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
+        .animation(animates ? .smooth(duration: 0.8) : nil, value: remaining)
+        .animation(animates ? .smooth(duration: 0.8) : nil, value: pace)
+    }
+}
+
+// MARK: - Self-updating relative times
+
+/// "Resets in 4 hr, 59 min" – counts down on its own (also inside widgets), switching to an
+/// absolute weekday/time when the reset is more than a day away.
+public struct ResetText: View {
+    public var date: Date?
+    public var notStarted: Bool
+    public var now: Date
+    public init(date: Date?, notStarted: Bool = false, now: Date = .now) {
+        self.date = date
+        self.notStarted = notStarted
+        self.now = now
+    }
+
+    public var body: some View {
+        if notStarted {
+            Text("Not started")
+        } else if let date {
+            if date <= now {
+                Text("Resetting…")
+            } else if date.timeIntervalSince(now) < 86_400 {
+                Text("Resets in \(Text(date, style: .relative))")
+            } else {
+                Text("Resets \(date.formatted(.dateTime.weekday(.abbreviated).hour().minute()))")
+            }
+        }
+    }
+}
+
+/// "Expires in 2 days, 3 hr" (self-updating) or "Expires 12 Dec".
+public struct ExpiryText: View {
+    public var date: Date?
+    public var now: Date
+    public init(_ date: Date?, now: Date = .now) {
+        self.date = date
+        self.now = now
+    }
+
+    public var body: some View {
+        if let date {
+            if date <= now {
+                Text("Expired")
+            } else if date.timeIntervalSince(now) < 7 * 86_400 {
+                Text("Expires in \(Text(date, style: .relative))")
+            } else {
+                Text("Expires \(date.formatted(.dateTime.month(.abbreviated).day()))")
+            }
+        } else {
+            Text("No expiry")
+        }
     }
 }
 
@@ -111,9 +176,17 @@ public struct WindowRow: View {
     public var colorByProvider: Bool
     public var compact: Bool
     public var now: Date
+    /// When the numbers were read (for stale values).
+    public var asOf: Date?
+    @Environment(\.headroomAnimates) private var animates
+
+    private var stale: Bool { window.isStale == true }
+    /// A stale window that hadn't started when we last saw it: we can't know what's left now.
+    private var unknown: Bool { stale && window.resetsAt == nil && window.usedFraction == 0 && window.kind == .session }
 
     public init(window: UsageWindow, provider: ProviderID, showPace: Bool = true,
-                colorByProvider: Bool = false, compact: Bool = false, now: Date = .now) {
+                colorByProvider: Bool = false, compact: Bool = false, now: Date = .now, asOf: Date? = nil) {
+        self.asOf = asOf
         self.window = window
         self.provider = provider
         self.showPace = showPace
@@ -130,20 +203,29 @@ public struct WindowRow: View {
                     .fontWeight(.medium)
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Text("\(Fmt.percent(window.remainingFraction)) left")
+                Text(unknown ? "—" : "\(stale ? "~" : "")\(Fmt.percent(window.remainingFraction)) left")
                     .font(compact ? .caption : .callout)
                     .monospacedDigit()
-                    .foregroundStyle(window.isExhausted ? .red : .primary)
+                    .contentTransition(animates ? .numericText(value: window.remainingFraction) : .identity)
+                    .animation(animates ? .smooth : nil, value: window.remainingFraction)
+                    .foregroundStyle(window.isExhausted && !stale ? .red : stale ? .secondary : .primary)
             }
-            LimitBar(remaining: window.remainingFraction,
-                     pace: showPace ? window.evenPaceRemaining(at: now) : nil,
+            LimitBar(remaining: unknown ? 0 : window.remainingFraction,
+                     pace: showPace && !stale ? window.evenPaceRemaining(at: now) : nil,
                      color: Theme.color(for: window, provider: provider, byProvider: colorByProvider),
                      height: compact ? 4 : 6)
+                .opacity(stale ? 0.45 : 1)
             if !compact {
                 HStack {
-                    Text(window.resetsAt == nil && window.usedFraction == 0 ? "Not started" : Fmt.resets(window.resetsAt, now: now))
+                    if unknown {
+                        Text("Unknown – no recent data")
+                    } else if stale, let asOf {
+                        Text("As of \(asOf.formatted(.relative(presentation: .named)))")
+                    } else {
+                        ResetText(date: window.resetsAt, notStarted: window.resetsAt == nil && window.usedFraction == 0, now: now)
+                    }
                     Spacer()
-                    if showPace, let delta = window.paceDelta(at: now) {
+                    if showPace, !stale, let delta = window.paceDelta(at: now) {
                         PaceLabel(delta: delta)
                     }
                 }

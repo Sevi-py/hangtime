@@ -92,7 +92,7 @@ final class AppSettings {
         let storedOrder = (d.stringArray(forKey: "order") ?? []).compactMap(ProviderID.init)
         order = storedOrder + ProviderID.allCases.filter { !storedOrder.contains($0) }
 
-        refreshMinutes = d.object(forKey: "refreshMinutes") as? Double ?? 5
+        refreshMinutes = d.object(forKey: "refreshMinutes") as? Double ?? 0
         menuBarStyle = MenuBarStyle(rawValue: d.string(forKey: "menuBarStyle") ?? "") ?? .perProvider
         menuBarWindow = MenuBarWindowChoice(rawValue: d.string(forKey: "menuBarWindow") ?? "") ?? .tightest
         menuBarShowsResetTime = d.object(forKey: "menuBarShowsResetTime") as? Bool ?? false

@@ -120,7 +120,7 @@ struct CodexProvider: UsageProvider {
                 snap.bankedResets.append(BankedReset(
                     id: cid,
                     title: JSON.string(c["title"]) ?? "Rate limit reset",
-                    detail: JSON.string(c["description"]),
+                    detail: nil, // backend "description" is marketing copy ("Thanks for using Codex!…")
                     grantedAt: JSON.date(c["grantedAt"]),
                     expiresAt: JSON.date(c["expiresAt"]),
                     redeemable: true))

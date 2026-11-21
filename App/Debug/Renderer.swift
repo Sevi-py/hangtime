@@ -21,8 +21,10 @@ enum DebugRenderer {
                        to: out.appendingPathComponent("panel-\(suffix).png"))
             await snap(AnyView(DashboardView().environment(model)), size: CGSize(width: 860, height: 1300), dark: dark,
                        to: out.appendingPathComponent("dashboard-\(suffix).png"))
-            await snap(AnyView(SettingsView().environment(model)), size: nil, dark: dark,
-                       to: out.appendingPathComponent("settings-\(suffix).png"))
+            for tab in ["general", "providers", "history", "about"] {
+                await snap(AnyView(SettingsView(tab: tab).environment(model)), size: nil, dark: dark,
+                           to: out.appendingPathComponent("settings-\(tab)-\(suffix).png"))
+            }
             let widgets: [(String, CGSize, AnyView)] = [
                 ("limits-small", .init(width: 170, height: 170), AnyView(ProviderLimitsView(entry: .init(date: .now, state: state, intent: nil), config: ProviderLimitsIntent(), familyOverride: .systemSmall))),
                 ("limits-medium", .init(width: 364, height: 170), AnyView(ProviderLimitsView(entry: .init(date: .now, state: state, intent: nil), config: ProviderLimitsIntent(), familyOverride: .systemMedium))),

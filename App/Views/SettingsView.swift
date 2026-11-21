@@ -2,16 +2,18 @@ import SwiftUI
 import ServiceManagement
 
 struct SettingsView: View {
+    @State var tab = "general"
+
     var body: some View {
-        TabView {
-            Tab("General", systemImage: "gearshape") { GeneralSettings() }
-            Tab("Providers", systemImage: "terminal") { ProviderSettings() }
-            Tab("Appearance", systemImage: "paintpalette") { AppearanceSettings() }
-            Tab("Notifications", systemImage: "bell.badge") { NotificationSettings() }
-            Tab("History", systemImage: "chart.bar.xaxis") { HistorySettings() }
+        TabView(selection: $tab) {
+            Tab("General", systemImage: "gearshape", value: "general") { GeneralSettings() }
+            Tab("Providers", systemImage: "terminal", value: "providers") { ProviderSettings() }
+            Tab("Appearance", systemImage: "paintpalette", value: "appearance") { AppearanceSettings() }
+            Tab("Notifications", systemImage: "bell.badge", value: "notifications") { NotificationSettings() }
+            Tab("History", systemImage: "chart.bar.xaxis", value: "history") { HistorySettings() }
+            Tab("About", systemImage: "info.circle", value: "about") { AboutSettings() }
         }
-        .frame(width: 560)
-        .scenePadding(.horizontal)
+        .frame(width: 580)
     }
 }
 
@@ -27,13 +29,15 @@ private struct GeneralSettings: View {
                 Toggle("Open at login", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
             }
             Section("Refreshing") {
-                Picker("Check usage every", selection: $s.refreshMinutes) {
-                    Text("Minute").tag(1.0)
-                    Text("2 minutes").tag(2.0)
-                    Text("5 minutes").tag(5.0)
-                    Text("10 minutes").tag(10.0)
-                    Text("15 minutes").tag(15.0)
-                    Text("30 minutes").tag(30.0)
+                Picker("Check usage", selection: $s.refreshMinutes) {
+                    Text("As often as possible").tag(0.0)
+                    Divider()
+                    Text("Every minute").tag(1.0)
+                    Text("Every 2 minutes").tag(2.0)
+                    Text("Every 5 minutes").tag(5.0)
+                    Text("Every 10 minutes").tag(10.0)
+                    Text("Every 15 minutes").tag(15.0)
+                    Text("Every 30 minutes").tag(30.0)
                 }
                 .onChange(of: s.refreshMinutes) { model.scheduleTimer() }
                 LabeledContent("Last updated") {
@@ -59,42 +63,26 @@ private struct GeneralSettings: View {
 
 private struct ProviderSettings: View {
     @Environment(AppModel.self) private var model
-    @State private var selection: ProviderID? = .claude
+    @State private var selection: ProviderID = .claude
 
     var body: some View {
-        HStack(spacing: 0) {
-            List(selection: $selection) {
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
                 ForEach(model.settings.order) { p in
-                    HStack(spacing: 8) {
-                        ProviderGlyph(p, size: 22)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(p.displayName)
-                            Text(statusText(p)).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Circle().fill(statusColor(p)).frame(width: 7, height: 7)
+                    ProviderTile(provider: p, selected: selection == p, status: statusText(p), color: statusColor(p)) {
+                        selection = p
                     }
-                    .padding(.vertical, 3)
-                    .tag(p)
                 }
-                .onMove { from, to in model.settings.order.move(fromOffsets: from, toOffset: to) }
             }
-            .listStyle(.sidebar)
-            .frame(width: 190)
-
-            Divider()
-
-            if let p = selection {
-                ProviderDetail(provider: p).id(p)
-            } else {
-                Text("Select a provider").foregroundStyle(.secondary).frame(maxWidth: .infinity)
-            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            ProviderDetail(provider: selection).id(selection)
         }
-        .frame(height: 440)
+        .frame(height: 520)
     }
 
     private func statusText(_ p: ProviderID) -> String {
-        guard model.settings.enabled[p] ?? true else { return "Disabled" }
+        guard model.settings.enabled[p] ?? true else { return "Hidden" }
         switch model.install[p] {
         case .installed?:
             switch model.snapshots[p]?.status {
@@ -108,9 +96,41 @@ private struct ProviderSettings: View {
     }
 
     private func statusColor(_ p: ProviderID) -> Color {
-        guard model.settings.enabled[p] ?? true else { return .secondary.opacity(0.4) }
-        guard model.install[p]?.isInstalled == true else { return .secondary.opacity(0.4) }
+        guard model.settings.enabled[p] ?? true, model.install[p]?.isInstalled == true else { return .secondary.opacity(0.5) }
         return (model.snapshots[p]?.status.isProblem ?? false) ? .orange : .green
+    }
+}
+
+private struct ProviderTile: View {
+    var provider: ProviderID
+    var selected: Bool
+    var status: String
+    var color: Color
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                ProviderGlyph(provider, size: 22)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(provider.displayName).font(.system(size: 13, weight: .medium)).foregroundStyle(.primary)
+                    HStack(spacing: 4) {
+                        Circle().fill(color).frame(width: 6, height: 6)
+                        Text(status).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(selected ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.04),
+                        in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(selected ? Color.accentColor : Color.primary.opacity(0.08), lineWidth: selected ? 1.5 : 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -412,5 +432,34 @@ private struct HeatmapColorPicker: View {
                 }
             }
         }
+    }
+}
+
+private struct AboutSettings: View {
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 96, height: 96)
+            Text("Headroom").font(.title.weight(.semibold))
+            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"))")
+                .foregroundStyle(.secondary)
+            Text("See what's left of your Claude Code, Codex and Grok subscriptions.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
+            HStack {
+                Link("Source on GitHub", destination: URL(string: "https://github.com/Sevi-py/usage-widget")!)
+            }
+            .padding(.top, 6)
+            Spacer()
+            Text("Provider logos from LobeHub Icons (MIT). Logos are trademarks of their respective owners.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity)
+        .frame(height: 340)
     }
 }

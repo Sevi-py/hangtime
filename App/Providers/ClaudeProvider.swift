@@ -100,17 +100,19 @@ struct ClaudeProvider: UsageProvider {
         // Anthropic rate-limits this endpoint aggressively (per token). Respect Retry-After and never
         // poll more than every few minutes; serve the freshest cached body in between.
         if let wait = await Self.cache.retryAfter, wait > .now {
-            return bestCached(into: snap)
+            return await bestCached(into: snap)
         }
         if let at = await Self.cache.fetchedAt, Date.now.timeIntervalSince(at) < Self.minInterval,
            await Self.cache.lastBody != nil {
-            return bestCached(into: snap)
+            return await bestCached(into: snap)
         }
 
         do {
             let body = try await usage(token: creds!.accessToken, version: version)
             await Self.cache.store(body)
-            return parse(body, into: snap, note: nil)
+            var fresh = parse(body, into: snap, note: nil)
+            fresh.dataAsOf = .now
+            return fresh
         } catch ClaudeError.unauthorized {
             // Token revoked/rotated: give the CLI a chance to refresh, then retry once.
             await nudgeCLIRefresh(command: command)
@@ -122,10 +124,10 @@ struct ClaudeProvider: UsageProvider {
             return ProviderSnapshot(provider: id, status: .loggedOut, cliVersion: version)
         } catch ClaudeError.rateLimited(let retry) {
             await Self.cache.setRetry(retry)
-            return bestCached(into: snap)
+            return await bestCached(into: snap)
         } catch {
             if await Self.cache.lastBody != nil || Self.cliCache() != nil {
-                var s = bestCached(into: snap)
+                var s = await bestCached(into: snap)
                 s.notes.append("Couldn't reach Anthropic – showing last known values.")
                 return s
             }
@@ -142,12 +144,32 @@ struct ClaudeProvider: UsageProvider {
         return (body, JSON.date(cached["fetchedAtMs"]) ?? .distantPast)
     }
 
+    /// Marks numbers read from a cache as "last known", and applies what we *do* know: any window whose
+    /// reset time has passed since the snapshot has been reset.
+    private func ageing(_ s: ProviderSnapshot, asOf: Date) async -> ProviderSnapshot {
+        var snap = s
+        snap.dataAsOf = asOf
+        guard Date.now.timeIntervalSince(asOf) > 10 * 60 else { return snap }
+        let retry = await Self.cache.retryAfter
+        snap.staleReason = "Anthropic is limiting usage checks"
+            + (retry.map { $0 > .now ? " – retrying \($0.formatted(date: .omitted, time: .shortened))" : "" } ?? "")
+            + "."
+        for i in snap.windows.indices {
+            snap.windows[i].isStale = true
+            if let r = snap.windows[i].resetsAt, r <= .now {
+                snap.windows[i].usedFraction = 0
+                snap.windows[i].resetsAt = nil
+            }
+        }
+        return snap
+    }
+
     /// Picks whichever is newer: our last response or the CLI's cache. Banked resets only come from ours.
-    private func bestCached(into snap: ProviderSnapshot) -> ProviderSnapshot {
+    private func bestCached(into snap: ProviderSnapshot) async -> ProviderSnapshot {
         let ours = Self.cache.peek()
         let cli = Self.cliCache()
         if let ours, ours.at >= (cli?.at ?? .distantPast) || cli == nil {
-            return parse(ours.body, into: snap, note: nil)
+            return await ageing(parse(ours.body, into: snap, note: nil), asOf: ours.at)
         }
         if let cli {
             var s = parse(cli.body, into: snap, note: nil)
@@ -157,7 +179,7 @@ struct ClaudeProvider: UsageProvider {
                 s.bankedResets = withResets.bankedResets
                 s.bankedResetCount = withResets.bankedResetCount
             }
-            return s
+            return await ageing(s, asOf: cli.at)
         }
         var s = snap
         s.status = .error("Anthropic is rate limiting usage requests – trying again soon.")
@@ -175,7 +197,9 @@ struct ClaudeProvider: UsageProvider {
         if let ms = JSON.date(cached["fetchedAtMs"]) {
             note = (reason.map { $0 + " " } ?? "") + "Cached \(ms.formatted(.relative(presentation: .named)))."
         }
-        return parse(body, into: snap, note: note)
+        var out = parse(body, into: snap, note: note)
+        if let at = JSON.date(cached["fetchedAtMs"]) { out.dataAsOf = at }
+        return out
     }
 
     enum ClaudeError: Error { case unauthorized, rateLimited(Date?), http(Int) }

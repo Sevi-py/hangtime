@@ -79,6 +79,8 @@ public struct UsageWindow: Codable, Hashable, Identifiable, Sendable {
     public var resetsAt: Date?
     /// Length of the window, when known. Needed for the "even pace" marker.
     public var duration: TimeInterval?
+    /// Last known value only (the provider couldn't be reached recently). Optional for Codable compatibility.
+    public var isStale: Bool?
 
     public init(id: String, kind: WindowKind, title: String, scope: String? = nil,
                 usedFraction: Double, resetsAt: Date?, duration: TimeInterval?) {
@@ -171,6 +173,10 @@ public struct ProviderSnapshot: Codable, Hashable, Identifiable, Sendable {
     public var notes: [String]
     public var fetchedAt: Date
     public var cliVersion: String?
+    /// When the limit numbers were actually read from the provider (may be older than `fetchedAt`).
+    public var dataAsOf: Date?
+    /// Why the numbers are old (shown on the card).
+    public var staleReason: String?
 
     public var id: ProviderID { provider }
 

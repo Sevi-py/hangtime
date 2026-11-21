@@ -72,6 +72,8 @@ final class AppModel {
 
     func scheduleTimer() {
         timer?.invalidate()
+        // "As often as possible" (0) = every minute. Each provider additionally protects itself
+        // (Claude respects Anthropic's Retry-After and a minimum interval).
         let interval = max(1, settings.refreshMinutes) * 60
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             Task { @MainActor in await AppModel.shared.refreshAll() }
@@ -81,7 +83,13 @@ final class AppModel {
 
     // MARK: Refresh
 
+    private var lastDetect: Date?
+
     func detectCLIs(force: Bool = false) async {
+        // CLI detection spawns processes; do it every 10 min (or when asked), not on every refresh.
+        if !force, let lastDetect, Date.now.timeIntervalSince(lastDetect) < 600,
+           ProviderID.allCases.allSatisfy({ install[$0] != nil && install[$0] != .unknown }) { return }
+        lastDetect = .now
         if force { await Shell.shared.invalidate() }
         await withTaskGroup(of: (ProviderID, InstallState).self) { group in
             for p in ProviderID.allCases {
@@ -154,7 +162,7 @@ final class AppModel {
         let loaded = await Task.detached(priority: .utility) {
             await HistoryLoader.load(preference: pref, providers: providers, commands: commands)
         }.value
-        history = loaded
+        withAnimation(.smooth(duration: 0.7)) { history = loaded }
         lastHistoryLoad = .now
         publish()
     }

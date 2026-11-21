@@ -7,10 +7,11 @@ final class Notifier {
     private let center = UNUserNotificationCenter.current()
     private let d = UserDefaults.standard
 
-    /// "provider|windowId" keys the user asked to be notified about.
-    private(set) var armed: Set<String> {
-        get { Set(d.stringArray(forKey: "armedResetAlerts") ?? []) }
-        set { d.set(Array(newValue), forKey: "armedResetAlerts") }
+    /// One-shot alerts: "provider|windowId" → the reset time (unix seconds) the user wants to hear about.
+    /// Once that reset has happened the entry is removed, so it only fires for the *next* reset.
+    private(set) var armed: [String: Double] {
+        get { (d.dictionary(forKey: "armedResetAlertsV2") as? [String: Double]) ?? [:] }
+        set { d.set(newValue, forKey: "armedResetAlertsV2") }
     }
 
     private var lowAlerted: Set<String> {
@@ -24,15 +25,15 @@ final class Notifier {
 
     static func key(_ p: ProviderID, _ w: UsageWindow) -> String { "\(p.rawValue)|\(w.id)" }
 
-    func isArmed(_ p: ProviderID, _ w: UsageWindow) -> Bool { armed.contains(Self.key(p, w)) }
+    func isArmed(_ p: ProviderID, _ w: UsageWindow) -> Bool { armed[Self.key(p, w)] != nil }
 
     func toggleResetAlert(provider p: ProviderID, window w: UsageWindow) {
         let k = Self.key(p, w)
-        if armed.contains(k) {
-            armed.remove(k)
+        if armed[k] != nil {
+            armed.removeValue(forKey: k)
             center.removePendingNotificationRequests(withIdentifiers: ["reset.\(k)"])
         } else {
-            armed.insert(k)
+            armed[k] = w.resetsAt?.timeIntervalSince1970 ?? Date.now.addingTimeInterval(7 * 86400).timeIntervalSince1970
             Task {
                 await requestAuthorization()
                 schedule(p, w)
@@ -74,16 +75,27 @@ final class Notifier {
 
             for w in snap.windows {
                 let k = Self.key(p, w)
-                // Auto-arm exhausted limits if the user wants that globally.
-                if s.notifyWhenAnyLimitResets, w.isExhausted { armedNow.insert(k) }
-                if armedNow.contains(k) {
-                    if w.isExhausted || (w.resetsAt ?? .distantPast) > .now {
-                        schedule(p, w)
-                    }
-                    // The window reset (no longer used up and previous reset time passed) → disarm.
-                    if let prev = old[p]?.window(id: w.id), let prevReset = prev.resetsAt,
-                       prevReset <= .now, !w.isExhausted {
-                        armedNow.remove(k)
+                // Global option: auto-arm (once) every limit that is used up.
+                if s.notifyWhenAnyLimitResets, w.isExhausted, armedNow[k] == nil, let r = w.resetsAt {
+                    armedNow[k] = r.timeIntervalSince1970
+                }
+                if let target = armedNow[k] {
+                    if Date.now.timeIntervalSince1970 >= target + 30 {
+                        // The reset we were waiting for has happened (the scheduled notification fired) → disarm.
+                        armedNow.removeValue(forKey: k)
+                    } else {
+                        // Keep the notification in sync if the reset time moved (e.g. after a banked reset).
+                        if let r = w.resetsAt, abs(r.timeIntervalSince1970 - target) > 60, r > .now {
+                            armedNow[k] = r.timeIntervalSince1970
+                        }
+                        if !w.isExhausted && old[p]?.window(id: w.id)?.isExhausted == true {
+                            // Freed up early (banked reset) – tell the user now and disarm.
+                            center.removePendingNotificationRequests(withIdentifiers: ["reset.\(k)"])
+                            post("reset.\(k).now", "\(p.shortName) limit available again", "Your \(w.title.lowercased()) limit was reset.")
+                            armedNow.removeValue(forKey: k)
+                        } else {
+                            schedule(p, w)
+                        }
                     }
                 }
                 // Low remaining alerts (once per window cycle).
