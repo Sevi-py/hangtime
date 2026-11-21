@@ -32,10 +32,12 @@
 		990E7CBF7281C6EAA3253B8B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F959987B01C4CDAD8D1201C3 /* SharedStore.swift */; };
 		9A7069C06E8F4FB07650DD5B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2BE599D044CDAB1F08D7AC /* Theme.swift */; };
 		9C99A87AFC7F199226253A93 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DC34DC04563D1C1363B36E /* SettingsView.swift */; };
+		B478986365E49530CFC4F56F /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4002739984D552A11AB2FAB9 /* DateFormatting.swift */; };
 		BDE7D13551F2B094F5BA08D4 /* GrokProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78EF3A16EB5CBF0FF581F51C /* GrokProvider.swift */; };
 		C1D12D527AB58240FF7A8E07 /* UsageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171999E1EE4ABF00D703DEAF /* UsageProvider.swift */; };
 		C4D5A3A7789D56EE0511CEA4 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 268CE1E0E7F22C80718BBC0F /* Models.swift */; };
 		CF1670B44252EE9644F0C10F /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC8ED6861AC7F774006C226 /* WidgetIntents.swift */; };
+		D22650A2AD2579DBE55326F8 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4002739984D552A11AB2FAB9 /* DateFormatting.swift */; };
 		D9B5B4651B64CE1D5096848C /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B70786DC4283C38D892754 /* Components.swift */; };
 		D9EC4B9CDF1AF118B7294ED6 /* UsageWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FBF52279851A81AE1A9C5D /* UsageWidgets.swift */; };
 		DA0E7A8B6A30DAFB33D07318 /* DarwinNotify.swift in Sources */ = {isa = PBXBuildFile; fileRef = D899D01E46DAC3123C6DF374 /* DarwinNotify.swift */; };
@@ -89,6 +91,7 @@
 		2CFB1A32DC9BB186D6340F6A /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		2D3D62702CB18920B7289198 /* Brand.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Brand.xcassets; sourceTree = "<group>"; };
 		36D67398E0AC0A886CA5B362 /* Pricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pricing.swift; sourceTree = "<group>"; };
+		4002739984D552A11AB2FAB9 /* DateFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatting.swift; sourceTree = "<group>"; };
 		4782D79EC07DE70C6C2F0405 /* CodexProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexProvider.swift; sourceTree = "<group>"; };
 		51F6567CADF45BC749319E9E /* MenuContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuContentView.swift; sourceTree = "<group>"; };
 		5300B0340A3C1363A314BCD4 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
@@ -185,6 +188,7 @@
 				2D3D62702CB18920B7289198 /* Brand.xcassets */,
 				26B70786DC4283C38D892754 /* Components.swift */,
 				D899D01E46DAC3123C6DF374 /* DarwinNotify.swift */,
+				4002739984D552A11AB2FAB9 /* DateFormatting.swift */,
 				268CE1E0E7F22C80718BBC0F /* Models.swift */,
 				F959987B01C4CDAD8D1201C3 /* SharedStore.swift */,
 				9D2BE599D044CDAB1F08D7AC /* Theme.swift */,
@@ -366,6 +370,7 @@
 				16FB06DF9B18139A08424FC5 /* Components.swift in Sources */,
 				DA0E7A8B6A30DAFB33D07318 /* DarwinNotify.swift in Sources */,
 				ECFB7FCFAEADC739D173BDBA /* DashboardView.swift in Sources */,
+				B478986365E49530CFC4F56F /* DateFormatting.swift in Sources */,
 				BDE7D13551F2B094F5BA08D4 /* GrokProvider.swift in Sources */,
 				2974EEA1C928B199B6B4DCED /* HeadroomApp.swift in Sources */,
 				FA923BF3B01C86536C25D810 /* JSONRPCProcess.swift in Sources */,
@@ -394,6 +399,7 @@
 			files = (
 				D9B5B4651B64CE1D5096848C /* Components.swift in Sources */,
 				44A2CDE39252BA02DDF6366C /* DarwinNotify.swift in Sources */,
+				D22650A2AD2579DBE55326F8 /* DateFormatting.swift in Sources */,
 				C4D5A3A7789D56EE0511CEA4 /* Models.swift in Sources */,
 				990E7CBF7281C6EAA3253B8B /* SharedStore.swift in Sources */,
 				9A7069C06E8F4FB07650DD5B /* Theme.swift in Sources */,

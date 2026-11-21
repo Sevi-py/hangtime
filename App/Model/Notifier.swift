@@ -113,7 +113,7 @@ final class Notifier {
                     guard let exp = r.expiresAt, exp.timeIntervalSinceNow > 24 * 3600 else { continue }
                     let content = UNMutableNotificationContent()
                     content.title = "\(p.shortName) banked reset expires tomorrow"
-                    content.body = "\(r.title) expires \(exp.formatted(date: .abbreviated, time: .shortened)). Use it before it's gone."
+                    content.body = "\(r.title) expires \(DateFmt.dateTime(exp)). Use it before it's gone."
                     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: exp.timeIntervalSinceNow - 24 * 3600, repeats: false)
                     center.add(UNNotificationRequest(identifier: "expiry.\(p.rawValue).\(r.id)", content: content, trigger: trigger))
                 }

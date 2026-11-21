@@ -54,7 +54,7 @@ public enum Fmt {
         let left = date.timeIntervalSince(now)
         if left <= 0 { return "Resetting…" }
         if left < 86_400 { return "Resets in \(duration(left))" }
-        return "Resets \(date.formatted(.dateTime.weekday(.abbreviated).hour().minute()))"
+        return "Resets \(DateFmt.dayTime(date, now: now))"
     }
 
     public static func expires(_ date: Date?, now: Date = .now) -> String {
@@ -62,7 +62,7 @@ public enum Fmt {
         let left = date.timeIntervalSince(now)
         if left <= 0 { return "Expired" }
         if left < 7 * 86_400 { return "Expires in \(duration(left))" }
-        return "Expires \(date.formatted(.dateTime.month(.abbreviated).day()))"
+        return "Expires \(DateFmt.date(date))"
     }
 
     public static func tokens(_ value: Double) -> String {

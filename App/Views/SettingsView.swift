@@ -41,7 +41,7 @@ private struct GeneralSettings: View {
                 }
                 .onChange(of: s.refreshMinutes) { model.scheduleTimer() }
                 LabeledContent("Last updated") {
-                    if let d = model.lastRefresh { Text(d.formatted(date: .omitted, time: .standard)) } else { Text("Never") }
+                    if let d = model.lastRefresh { Text(DateFmt.time(d)) } else { Text("Never") }
                 }
                 HStack {
                     Spacer()
@@ -255,6 +255,7 @@ private struct AppearanceSettings: View {
                     Text("Traffic light (by remaining)").tag(false)
                 }
             }
+            DateTimeSection()
             Section("Usage panel") {
                 Toggle("Show daily chart", isOn: $s.popoverShowsChart)
                 Toggle("Show activity heatmap", isOn: $s.popoverShowsHeatmap)
@@ -262,7 +263,7 @@ private struct AppearanceSettings: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: 520)
+        .frame(height: 600)
         .onChange(of: s.showPaceMarker) { model.publish() }
         .onChange(of: s.colorByProvider) { model.publish() }
     }
@@ -379,7 +380,7 @@ private struct T3AccessSection: View {
                 case .granted(let exp, let used):
                     VStack(alignment: .trailing, spacing: 2) {
                         Label("Connected", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                        if let exp { Text("Renews automatically · expires \(exp.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary) }
+                        if let exp { Text("Renews automatically · expires \(DateFmt.date(exp))").font(.caption).foregroundStyle(.secondary) }
                         if let used { Text("Last used \(used.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }
                     }
                 }
@@ -461,5 +462,51 @@ private struct AboutSettings: View {
         .padding(30)
         .frame(maxWidth: .infinity)
         .frame(height: 340)
+    }
+}
+
+private struct DateTimeSection: View {
+    @Environment(AppModel.self) private var model
+    @AppStorage(DateFmt.Key.time, store: SharedStore.defaults) private var time = TimeFormatPref.system.rawValue
+    @AppStorage(DateFmt.Key.date, store: SharedStore.defaults) private var date = DateFormatPref.system.rawValue
+    @AppStorage(DateFmt.Key.reset, store: SharedStore.defaults) private var reset = ResetDisplayPref.relative.rawValue
+
+    private let sample = Calendar.current.date(bySettingHour: 14, minute: 30, second: 0,
+                                               of: Calendar.current.date(byAdding: .day, value: 3, to: .now)!)!
+
+    var body: some View {
+        Section {
+            Picker("Time format", selection: $time) {
+                ForEach(TimeFormatPref.allCases) { p in
+                    Text("\(p.title)  (\(DateFmt.time(sample, p)))").tag(p.rawValue)
+                }
+            }
+            Picker("Date format", selection: $date) {
+                ForEach(DateFormatPref.allCases) { p in
+                    Text("\(p.title)  (\(DateFmt.date(sample, p)))").tag(p.rawValue)
+                }
+            }
+            Picker("Show reset times as", selection: $reset) {
+                ForEach(ResetDisplayPref.allCases) { Text($0.title).tag($0.rawValue) }
+            }
+            LabeledContent("Preview") {
+                VStack(alignment: .trailing, spacing: 2) {
+                    ResetText(date: .now.addingTimeInterval(3 * 3600 + 25 * 60))
+                    ResetText(date: sample)
+                    ExpiryText(sample.addingTimeInterval(9 * 86400))
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .id("\(time)\(date)\(reset)")
+            }
+        } header: {
+            Text("Dates & times")
+        } footer: {
+            Text("System follows your Mac's Language & Region settings.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .onChange(of: time) { model.publish() }
+        .onChange(of: date) { model.publish() }
+        .onChange(of: reset) { model.publish() }
     }
 }

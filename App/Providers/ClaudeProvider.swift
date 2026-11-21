@@ -154,7 +154,7 @@ struct ClaudeProvider: UsageProvider {
         guard Date.now.timeIntervalSince(asOf) > 10 * 60 else { return snap }
         let retry = await Self.cache.retryAfter
         snap.staleReason = "Anthropic is limiting usage checks"
-            + (retry.map { $0 > .now ? " – retrying \($0.formatted(date: .omitted, time: .shortened))" : "" } ?? "")
+            + (retry.map { $0 > .now ? " – retrying \(DateFmt.time($0))" : "" } ?? "")
             + "."
         for i in snap.windows.indices {
             snap.windows[i].isStale = true
@@ -359,7 +359,7 @@ struct ClaudeProvider: UsageProvider {
             }
             snap.bankedResetCount = count
             if let cd = JSON.date(ce["cooldown_until"]), cd > .now {
-                snap.notes.append("Resets on cooldown until \(cd.formatted(date: .abbreviated, time: .shortened))")
+                snap.notes.append("Resets on cooldown until \(DateFmt.dateTime(cd))")
             }
         }
         if let jt = body["juniper_tide"] as? [String: Any], (jt["eligible"] as? Bool) == true {

@@ -21,7 +21,7 @@ enum DebugRenderer {
                        to: out.appendingPathComponent("panel-\(suffix).png"))
             await snap(AnyView(DashboardView().environment(model)), size: CGSize(width: 860, height: 1300), dark: dark,
                        to: out.appendingPathComponent("dashboard-\(suffix).png"))
-            for tab in ["general", "providers", "history", "about"] {
+            for tab in ["general", "providers", "appearance", "history", "about"] {
                 await snap(AnyView(SettingsView(tab: tab).environment(model)), size: nil, dark: dark,
                            to: out.appendingPathComponent("settings-\(tab)-\(suffix).png"))
             }

@@ -132,12 +132,18 @@ public struct ResetText: View {
         if notStarted {
             Text("Not started")
         } else if let date {
+            let soon = date.timeIntervalSince(now) < 86_400
             if date <= now {
                 Text("Resetting…")
-            } else if date.timeIntervalSince(now) < 86_400 {
-                Text("Resets in \(Text(date, style: .relative))")
             } else {
-                Text("Resets \(date.formatted(.dateTime.weekday(.abbreviated).hour().minute()))")
+                switch DateFmt.resetPref {
+                case .relative where soon:
+                    Text("Resets in \(Text(date, style: .relative))")
+                case .both where soon:
+                    Text("Resets in \(Text(date, style: .relative)) · \(DateFmt.time(date))")
+                default:
+                    Text("Resets \(DateFmt.dayTime(date, now: now))")
+                }
             }
         }
     }
@@ -154,12 +160,18 @@ public struct ExpiryText: View {
 
     public var body: some View {
         if let date {
+            let soon = date.timeIntervalSince(now) < 7 * 86_400
             if date <= now {
                 Text("Expired")
-            } else if date.timeIntervalSince(now) < 7 * 86_400 {
-                Text("Expires in \(Text(date, style: .relative))")
             } else {
-                Text("Expires \(date.formatted(.dateTime.month(.abbreviated).day()))")
+                switch DateFmt.resetPref {
+                case .relative where soon:
+                    Text("Expires in \(Text(date, style: .relative))")
+                case .both where soon:
+                    Text("Expires in \(Text(date, style: .relative)) · \(DateFmt.dateTime(date))")
+                default:
+                    Text("Expires \(DateFmt.dateTime(date))")
+                }
             }
         } else {
             Text("No expiry")
@@ -364,7 +376,7 @@ public struct ActivityHeatmap: View {
                                     .fill(date == nil ? Color.clear :
                                             value > 0 ? tint.opacity(level(value, max: maxValue)) : Color.primary.opacity(0.07))
                                     .frame(width: cell, height: cell)
-                                    .help(date.map { "\($0.formatted(date: .abbreviated, time: .omitted)): \(Fmt.metric(value, metric))" } ?? "")
+                                    .help(date.map { "\(DateFmt.date($0)): \(Fmt.metric(value, metric))" } ?? "")
                             }
                         }
                     }

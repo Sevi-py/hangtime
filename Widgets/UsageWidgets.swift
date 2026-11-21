@@ -108,7 +108,9 @@ struct ProviderLimitsView: View {
                             Text(shortTitle(w)).font(.system(size: 10, weight: .medium)).lineLimit(1)
                             if family != .systemSmall {
                                 Group {
-                                    if let r = w.resetsAt { Text(r, style: .relative) } else { Text("Not started") }
+                                    if let r = w.resetsAt {
+                                        if DateFmt.resetPref == .absolute { Text(DateFmt.dayTime(r, now: entry.date)) } else { Text(r, style: .relative) }
+                                    } else { Text("Not started") }
                                 }
                                 .font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
                             }
