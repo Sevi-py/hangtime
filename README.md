@@ -7,7 +7,9 @@ banked-reset management and usage history charts.
 ## Features
 
 - **Menu bar status item**: what's left, per provider or just the most constrained limit, shown as text or mini
-  rings. Click it for a panel (no window) with every limit, banked resets, sign-in and history.
+  rings. Click it for a panel (no window) with every limit, banked resets, sign-in and history, plus menu-style
+  options: Refresh, Dashboard, Open at Login (on by default), Settings, About and Quit.
+- **Dashboard window**: large chart, a year-long heatmap (color selectable) and a per-model cost/token breakdown.
 - **Every limit the CLI reports**:
   - Claude: session (5h), weekly, and per-model weekly limits such as **Fable**.
   - Codex: session/weekly windows plus any per-model buckets.
@@ -32,7 +34,7 @@ banked-reset management and usage history charts.
 - **History**:
   - Daily cost and token charts, and a GitHub-style activity heatmap.
   - Uses **T3 Code**'s usage service when T3 Code is installed and running (all providers, priced with LiteLLM
-    rates).
+    rates). Access is a read-only T3 session that you can connect, renew or revoke in Settings → History.
   - Otherwise parses the CLIs' own session logs incrementally (`~/.claude/projects`, `~/.codex/sessions`,
     `~/.grok/sessions`).
 - **Widgets** (all configurable via *Edit Widget*): Provider Limits (rings or bars, S/M/L), All Providers (S/M/L),
@@ -75,3 +77,6 @@ Debug builds include diagnostics:
 
 - `Headroom --dump [--history]` prints everything it fetched as JSON.
 - `Headroom --render <dir>` renders the panel, settings and widgets to PNGs in light and dark mode.
+
+Provider logos come from [LobeHub Icons](https://github.com/lobehub/lobe-icons) (MIT). The logos are trademarks of
+their owners.
