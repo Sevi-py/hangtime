@@ -65,6 +65,12 @@ How it stays robust to CLI updates:
 Requirements: Xcode 26+, macOS 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```sh
+./scripts/install.sh   # build, replace /Applications/Headroom.app, reload placed widgets, relaunch
+```
+
+Or manually:
+
+```sh
 xcodegen generate
 xcodebuild -project Headroom.xcodeproj -scheme Headroom -configuration Release -derivedDataPath build -allowProvisioningUpdates build
 cp -R build/Build/Products/Release/Headroom.app /Applications/
