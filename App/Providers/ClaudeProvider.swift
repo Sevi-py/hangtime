@@ -123,7 +123,7 @@ struct ClaudeProvider: UsageProvider {
             }
             return ProviderSnapshot(provider: id, status: .loggedOut, cliVersion: version)
         } catch ClaudeError.rateLimited(let retry) {
-            await Self.cache.setRetry(retry)
+            await Self.cache.setRetry(Self.cache.backoff(serverRetry: retry))
             return await bestCached(into: snap)
         } catch {
             if await Self.cache.lastBody != nil || Self.cliCache() != nil {
@@ -135,7 +135,9 @@ struct ClaudeProvider: UsageProvider {
         }
     }
 
-    static let minInterval: TimeInterval = 150
+    /// Anthropic rate-limits this endpoint per token, and the token is shared with Claude Code itself,
+    /// T3 Code and other tools – so stay well below the limit.
+    static let minInterval: TimeInterval = 300
 
     /// Claude Code's own cached copy (`~/.claude.json → cachedUsageUtilization`), written whenever the CLI fetches.
     static func cliCache() -> (body: [String: Any], at: Date)? {
@@ -506,11 +508,22 @@ final class ClaudeCache: @unchecked Sendable {
     func peek() -> (body: [String: Any], at: Date)? { sync { body.map { ($0, at ?? .distantPast) } } }
 
     func store(_ b: [String: Any]) async {
-        sync { body = b; at = .now; retry = nil }
+        sync { body = b; at = .now; retry = nil; strikes = 0 }
+        UserDefaults.standard.set(0, forKey: "claude.429strikes")
         UserDefaults.standard.removeObject(forKey: "claude.retryAfter")
         if let d = try? JSONSerialization.data(withJSONObject: ["body": b, "at": Date.now.timeIntervalSince1970]) {
             try? d.write(to: Self.fileURL, options: .atomic)
         }
+    }
+
+    private var strikes: Int = UserDefaults.standard.integer(forKey: "claude.429strikes")
+
+    /// Exponential backoff on repeated 429s (5 min, 10, 20, … up to 2 h), never shorter than the server asks.
+    func backoff(serverRetry: Date?) -> Date {
+        let n = sync { strikes += 1; return strikes }
+        UserDefaults.standard.set(n, forKey: "claude.429strikes")
+        let ours = Date.now.addingTimeInterval(min(7200, 300 * pow(2, Double(n - 1))))
+        return max(ours, serverRetry ?? .distantPast)
     }
 
     func setRetry(_ d: Date?) async {
