@@ -110,10 +110,11 @@ private struct ProviderTile: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                ProviderGlyph(provider, size: 22)
+            HStack(spacing: 7) {
+                ProviderGlyph(provider, size: 20)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(provider.displayName).font(.system(size: 13, weight: .medium)).foregroundStyle(.primary)
+                        .lineLimit(1).minimumScaleFactor(0.85)
                     HStack(spacing: 4) {
                         Circle().fill(color).frame(width: 6, height: 6)
                         Text(status).font(.caption).foregroundStyle(.secondary)
@@ -121,7 +122,7 @@ private struct ProviderTile: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 8)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
             .background(selected ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.04),
@@ -445,7 +446,7 @@ private struct AboutSettings: View {
             Text("Headroom").font(.title.weight(.semibold))
             Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"))")
                 .foregroundStyle(.secondary)
-            Text("See what's left of your Claude Code, Codex and Grok subscriptions.")
+            Text("See what's left of your Claude Code, Codex, Grok and Antigravity subscriptions.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)

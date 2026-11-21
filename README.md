@@ -1,7 +1,7 @@
 # Headroom
 
 A native macOS menu bar app that shows how much of your AI coding subscriptions you have **left**, for
-**Claude Code**, **OpenAI Codex** and **xAI Grok CLI**. It also has desktop widgets, Control Center controls,
+**Claude Code**, **OpenAI Codex**, **xAI Grok CLI** and **Google Antigravity CLI** (`agy`). It also has desktop widgets, Control Center controls,
 banked-reset management and usage history charts.
 
 ## Features
@@ -14,13 +14,14 @@ banked-reset management and usage history charts.
   - Claude: session (5h), weekly, and per-model weekly limits such as **Fable**.
   - Codex: session/weekly windows plus any per-model buckets.
   - Grok: the plan's credit window.
+  - Antigravity: the weekly Gemini quota, plus the shared Claude & GPT model quota.
   - Limits are discovered dynamically, so plans without a session window (or with new limits) just work.
 - **Even-pace marker**: a tick on every bar or ring shows how much would be left if you spread your usage evenly
   over the window. Halfway through the week, the tick sits in the middle.
 - **Banked resets**: lists available resets with their expiry and lets you redeem them (with confirmation).
   - Claude: `cedar_ember` grants (what `/limit-reset` uses) and the weekly "reset 5-hour limit" allowance.
   - Codex: reset credits via `codex app-server`.
-  - Grok has no banked resets.
+  - Grok and Antigravity have no banked resets.
 - **Notifications**:
   - When a used-up limit resets, either per limit from the panel or always.
   - When a limit drops below a threshold.
@@ -48,6 +49,7 @@ banked-reset management and usage history charts.
 | Claude Code | The CLI's own login (Keychain item `Claude Code-credentials`, read via `/usr/bin/security`; falls back to `~/.claude/.credentials.json`) | `GET api.anthropic.com/api/oauth/usage` (same endpoint as `/usage`), generic `limits[]` array | `cedar_ember` grants → `POST /api/organizations/{org}/reset_rate_limits` |
 | Codex | Handled by the CLI | `codex app-server` → `account/rateLimits/read` | `account/rateLimitResetCredit/consume` |
 | Grok | `~/.grok/auth.json` | `GET cli-chat-proxy.grok.com/v1/billing?format=credits` | n/a |
+| Antigravity (`agy`) | The CLI's login (Keychain item `gemini` / `antigravity`, read via `/usr/bin/security`) | `POST daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels` (per-model `quotaInfo`) | n/a |
 
 How it stays robust to CLI updates:
 

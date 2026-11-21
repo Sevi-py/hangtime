@@ -29,7 +29,7 @@ actor Shell {
     private static let home = FileManager.default.homeDirectoryForCurrentUser.path
 
     static let extraDirs: [String] = [
-        "\(home)/.local/bin", "\(home)/.claude/local", "\(home)/.grok/bin", "\(home)/.codex/bin",
+        "\(home)/.local/bin", "\(home)/.gemini/antigravity-cli/bin", "\(home)/.claude/local", "\(home)/.grok/bin", "\(home)/.codex/bin",
         "/opt/homebrew/bin", "/usr/local/bin", "\(home)/.npm-global/bin", "\(home)/Library/pnpm",
         "\(home)/.bun/bin", "\(home)/.volta/bin", "\(home)/.cargo/bin", "\(home)/.deno/bin",
         "\(home)/.yarn/bin", "\(home)/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin",

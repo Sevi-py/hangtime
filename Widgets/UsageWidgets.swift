@@ -228,7 +228,7 @@ struct OverviewView: View {
             StatusPlaceholder(snapshot: nil)
         } else if family == .systemSmall {
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(snaps.prefix(3)) { s in
+                ForEach(snaps.prefix(4)) { s in
                     HStack(spacing: 6) {
                         ProviderGlyph(s.provider, size: 14)
                         if let w = config.limit.pick(s), usable(s) {
@@ -245,8 +245,8 @@ struct OverviewView: View {
             }
             .frame(maxHeight: .infinity)
         } else {
-            VStack(alignment: .leading, spacing: family == .systemLarge ? 12 : 8) {
-                ForEach(snaps.prefix(3)) { s in
+            VStack(alignment: .leading, spacing: family == .systemLarge ? 10 : 8) {
+                ForEach(snaps.prefix(family == .systemLarge ? 4 : 3)) { s in
                     VStack(alignment: .leading, spacing: 5) {
                         WidgetHeader(provider: s.provider, snapshot: s, compact: family == .systemMedium)
                         if !usable(s) {

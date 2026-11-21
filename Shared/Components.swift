@@ -285,7 +285,7 @@ public struct ProviderGlyph: View {
     public var body: some View {
         Group {
             switch provider {
-            case .claude:
+            case .claude, .antigravity:
                 Image(provider.logo).renderingMode(.template).resizable().foregroundStyle(provider.tint)
             case .codex, .grok:
                 // OpenAI's and xAI's marks are monochrome: black on light backgrounds, white on dark.

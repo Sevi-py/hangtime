@@ -214,6 +214,7 @@ enum T3CodeHistory {
             case let s where s.contains("claude"): provider = .claude
             case let s where s.contains("codex"): provider = .codex
             case let s where s.contains("grok"): provider = .grok
+            case let s where s.contains("antigravity") || s.contains("agy"): provider = .antigravity
             default: continue
             }
             let t = (b["totals"] as? [String: Any]) ?? [:]

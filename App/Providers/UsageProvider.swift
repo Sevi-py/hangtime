@@ -16,5 +16,6 @@ enum Providers {
         .claude: ClaudeProvider(),
         .codex: CodexProvider(),
         .grok: GrokProvider(),
+        .antigravity: AntigravityProvider(),
     ]
 }

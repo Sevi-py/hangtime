@@ -63,6 +63,8 @@ actor LocalLogHistory {
                     (codexHome.appendingPathComponent("archived_sessions"), ".jsonl")]
         case .grok:
             return [(GrokProvider.home.appendingPathComponent("sessions"), "updates.jsonl")]
+        case .antigravity:
+            return [] // agy keeps no token counts on disk
         }
     }
 
@@ -189,6 +191,7 @@ actor LocalLogHistory {
         case .claude: needle = Array(#""usage""#.utf8)
         case .codex: needle = Array(#""type":""#.utf8)
         case .grok: needle = Array("turn_completed".utf8)
+        case .antigravity: return previous
         }
 
         var lastNewline = rec.offset
@@ -281,6 +284,9 @@ actor LocalLogHistory {
                 appendAggregated(&rec, day: day, model: model, i: max(0, input - cr), o: JSON.int(m["outputTokens"]) ?? 0,
                                  cr: cr, cw: JSON.int(m["cacheCreationTokens"]) ?? 0, cost: cost)
             }
+
+        case .antigravity:
+            return
         }
     }
 

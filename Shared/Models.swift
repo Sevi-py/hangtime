@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Providers
 
 public enum ProviderID: String, Codable, CaseIterable, Identifiable, Hashable, Sendable {
-    case claude, codex, grok
+    case claude, codex, grok, antigravity
 
     public var id: String { rawValue }
 
@@ -12,6 +12,7 @@ public enum ProviderID: String, Codable, CaseIterable, Identifiable, Hashable, S
         case .claude: "Claude Code"
         case .codex: "Codex"
         case .grok: "Grok"
+        case .antigravity: "Antigravity"
         }
     }
 
@@ -20,6 +21,7 @@ public enum ProviderID: String, Codable, CaseIterable, Identifiable, Hashable, S
         case .claude: "Claude"
         case .codex: "Codex"
         case .grok: "Grok"
+        case .antigravity: "Antigravity"
         }
     }
 
@@ -29,6 +31,7 @@ public enum ProviderID: String, Codable, CaseIterable, Identifiable, Hashable, S
         case .claude: "claude"
         case .codex: "codex"
         case .grok: "grok"
+        case .antigravity: "agy"
         }
     }
 
@@ -41,6 +44,7 @@ public enum ProviderID: String, Codable, CaseIterable, Identifiable, Hashable, S
         case .claude: "asterisk"
         case .codex: "chevron.left.forwardslash.chevron.right"
         case .grok: "bolt.horizontal"
+        case .antigravity: "arrow.up.circle"
         }
     }
 }

@@ -3,7 +3,7 @@ import WidgetKit
 import Foundation
 
 enum ProviderOption: String, AppEnum {
-    case automatic, claude, codex, grok
+    case automatic, claude, codex, grok, antigravity
 
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Provider"
     static let caseDisplayRepresentations: [ProviderOption: DisplayRepresentation] = [
@@ -11,6 +11,7 @@ enum ProviderOption: String, AppEnum {
         .claude: "Claude Code",
         .codex: "Codex",
         .grok: "Grok",
+        .antigravity: "Antigravity",
     ]
 
     func resolve(in state: SharedState) -> ProviderID? {
@@ -19,6 +20,7 @@ enum ProviderOption: String, AppEnum {
         case .claude: .claude
         case .codex: .codex
         case .grok: .grok
+        case .antigravity: .antigravity
         }
     }
 }

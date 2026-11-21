@@ -19,19 +19,21 @@ struct MenuContentView: View {
         VStack(spacing: 0) {
             header
             ScrollView {
-                VStack(spacing: 10) {
+                // Sections sit directly on the panel's material, separated by inset hairlines.
+                VStack(spacing: 0) {
                     if model.visibleProviders.isEmpty {
                         emptyState
                     }
-                    ForEach(model.visibleProviders) { p in
-                        ProviderCard(provider: p, snapshot: model.snapshots[p])
+                    ForEach(Array(model.visibleProviders.enumerated()), id: \.element) { i, p in
+                        if i > 0 { SectionDivider() }
+                        ProviderSection(provider: p, snapshot: model.snapshots[p])
                     }
                     if !model.visibleProviders.isEmpty && (s.popoverShowsChart || s.popoverShowsHeatmap) {
-                        HistoryCard()
+                        SectionDivider()
+                        HistorySection()
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 10)
+                .padding(.bottom, 4)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
             }
             .scrollBounceBehavior(.basedOnSize)
@@ -73,7 +75,7 @@ struct MenuContentView: View {
         }
         .padding(.horizontal, 14)
         .padding(.top, 12)
-        .padding(.bottom, 10)
+        .padding(.bottom, 2)
     }
 
     @ViewBuilder
@@ -112,7 +114,7 @@ struct MenuContentView: View {
                 .foregroundStyle(.secondary)
             Text(model.isRefreshing ? "Looking for CLIs…" : "No supported CLIs found")
                 .font(.headline)
-            Text("Install Claude Code, Codex or Grok, or set a custom command in Settings.")
+            Text("Install Claude Code, Codex, Grok or Antigravity, or set a custom command in Settings.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -169,9 +171,26 @@ struct MenuDivider: View {
     }
 }
 
-// MARK: - Provider card
+/// Hairline between panel sections, inset to the content edges.
+struct SectionDivider: View {
+    var body: some View {
+        Rectangle()
+            .fill(.separator)
+            .frame(height: 1)
+            .padding(.horizontal, 14)
+    }
+}
 
-struct ProviderCard: View {
+private extension View {
+    /// Spacing for a panel section: aligned with the header and menu rows, with room to breathe above and below.
+    func panelSection() -> some View {
+        padding(.horizontal, 14).padding(.vertical, 14)
+    }
+}
+
+// MARK: - Provider section
+
+struct ProviderSection: View {
     @Environment(AppModel.self) private var model
     var provider: ProviderID
     var snapshot: ProviderSnapshot?
@@ -228,9 +247,8 @@ struct ProviderCard: View {
                 BankedResetsSection(provider: provider, snapshot: snap)
             }
         }
-        .padding(12)
-        .background(.background.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.separator.opacity(0.6)))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSection()
     }
 
     @ViewBuilder
@@ -388,7 +406,7 @@ struct BankedResetsSection: View {
 
 // MARK: - History
 
-struct HistoryCard: View {
+struct HistorySection: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -433,9 +451,8 @@ struct HistoryCard: View {
                 }
             }
         }
-        .padding(12)
-        .background(.background.opacity(0.6), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.separator.opacity(0.6)))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelSection()
     }
 
     private func stat(_ title: String, _ value: Double, _ metric: UsageHistory.Metric) -> some View {

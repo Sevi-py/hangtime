@@ -11,6 +11,7 @@ public extension ProviderID {
             appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
                 ? NSColor(white: 0.88, alpha: 1) : NSColor(white: 0.18, alpha: 1)
         })
+        case .antigravity: Color(red: 0.16, green: 0.60, blue: 0.86)
         }
     }
 }
