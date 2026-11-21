@@ -74,7 +74,8 @@ struct ProviderLimitsIntent: WidgetConfigurationIntent {
     @Parameter(title: "Provider", default: .automatic) var provider: ProviderOption
     @Parameter(title: "Style", default: .rings) var style: StyleOption
     @Parameter(title: "Show model limits", default: true) var showModelLimits: Bool
-    @Parameter(title: "Show even-pace marker", default: true) var showPace: Bool
+    @Parameter(title: "Even-pace marker on bars", default: true) var showPace: Bool
+    @Parameter(title: "Even-pace marker on rings", default: false) var showPaceOnRings: Bool
 }
 
 struct SingleGaugeIntent: WidgetConfigurationIntent {
@@ -83,7 +84,7 @@ struct SingleGaugeIntent: WidgetConfigurationIntent {
 
     @Parameter(title: "Provider", default: .automatic) var provider: ProviderOption
     @Parameter(title: "Limit", default: .tightest) var limit: LimitOption
-    @Parameter(title: "Show even-pace marker", default: true) var showPace: Bool
+    @Parameter(title: "Show even-pace marker", default: false) var showPace: Bool
 }
 
 struct OverviewIntent: WidgetConfigurationIntent {

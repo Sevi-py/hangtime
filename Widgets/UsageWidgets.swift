@@ -102,7 +102,8 @@ struct ProviderLimitsView: View {
                 HStack(spacing: family == .systemSmall ? 8 : 14) {
                     ForEach(shown) { w in
                         VStack(spacing: 4) {
-                            RingGauge(remaining: w.remainingFraction, pace: showPace ? w.evenPaceRemaining(at: entry.date) : nil,
+                            RingGauge(remaining: w.remainingFraction,
+                                      pace: config.showPaceOnRings && globalShowPace ? w.evenPaceRemaining(at: entry.date) : nil,
                                       color: Theme.color(for: w, provider: pid, byProvider: globalByProvider),
                                       lineWidth: family == .systemSmall ? 6 : 7)
                             Text(shortTitle(w)).font(.system(size: 10, weight: .medium)).lineLimit(1)
