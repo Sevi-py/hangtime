@@ -232,7 +232,13 @@ public struct WindowRow: View {
                     if unknown {
                         Text("Unknown – no recent data")
                     } else if stale, let asOf {
-                        Text("As of \(asOf.formatted(.relative(presentation: .named)))")
+                        // Reset times stay valid even when the usage numbers are old.
+                        HStack(spacing: 4) {
+                            ResetText(date: window.resetsAt, notStarted: window.resetsAt == nil && window.usedFraction == 0, now: now)
+                            Text("· as of \(asOf.formatted(.relative(presentation: .named)))")
+                                .foregroundStyle(.tertiary)
+                        }
+                        .lineLimit(1)
                     } else {
                         ResetText(date: window.resetsAt, notStarted: window.resetsAt == nil && window.usedFraction == 0, now: now)
                     }
