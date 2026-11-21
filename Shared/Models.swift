@@ -81,6 +81,8 @@ public struct UsageWindow: Codable, Hashable, Identifiable, Sendable {
     public var duration: TimeInterval?
     /// Last known value only (the provider couldn't be reached recently). Optional for Codable compatibility.
     public var isStale: Bool?
+    /// Extra context, e.g. "Up to 50% of weekly · 22% of weekly used".
+    public var note: String?
 
     public init(id: String, kind: WindowKind, title: String, scope: String? = nil,
                 usedFraction: Double, resetsAt: Date?, duration: TimeInterval?) {

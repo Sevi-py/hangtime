@@ -286,6 +286,19 @@ struct ClaudeProvider: UsageProvider {
                 usedFraction: pct / 100, resetsAt: JSON.date(l["resets_at"]),
                 duration: isSession ? 5 * 3600 : isWeekly ? 7 * 86400 : nil))
         }
+        // Model-scoped weekly limits are a share of the overall weekly limit (e.g. Fable may use up to 50%).
+        let limitsArray = (body["limits"] as? [[String: Any]]) ?? []
+        for share in (body["weekly_scoped_shares"] as? [[String: Any]]) ?? [] {
+            guard let idx = JSON.int(share["limit_index"]), idx >= 0, idx < limitsArray.count else { continue }
+            let l = limitsArray[idx]
+            let scope = ((l["scope"] as? [String: Any])?["model"] as? [String: Any]).flatMap { JSON.string($0["display_name"]) ?? JSON.string($0["id"]) }
+            let wid = "limits.\(JSON.string(l["kind"]) ?? "").\(scope ?? "all")"
+            guard let i = snap.windows.firstIndex(where: { $0.id == wid }) else { continue }
+            var parts: [String] = []
+            if let allow = JSON.int(share["allowance_percent_of_weekly"]) { parts.append("Up to \(allow)% of weekly") }
+            if let used = JSON.int(share["used_percent_of_weekly"]) { parts.append("\(used)% of weekly used") }
+            if !parts.isEmpty { snap.windows[i].note = parts.joined(separator: " · ") }
+        }
         let hasLimits = !snap.windows.isEmpty
         let modelScopes = Set(snap.windows.compactMap { $0.scope?.lowercased() })
 
