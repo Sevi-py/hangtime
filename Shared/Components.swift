@@ -249,11 +249,6 @@ public struct WindowRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                if let note = window.note {
-                    Text(note)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
             }
         }
     }

@@ -70,7 +70,7 @@ private struct LabelContent: View {
         .font(.system(size: 12, weight: .medium).monospacedDigit())
         .foregroundStyle(.black)
         .padding(.horizontal, 1)
-        .frame(height: 18)
+        .frame(height: 21)
     }
 
     private var warn: some View {
@@ -95,16 +95,16 @@ private struct MiniRing: View {
 
     var body: some View {
         ZStack {
-            Circle().stroke(.black.opacity(0.3), lineWidth: 2.2)
+            Circle().stroke(.black.opacity(0.28), lineWidth: 2.4)
             Circle().trim(from: 0, to: remaining)
-                .stroke(.black, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+                .stroke(.black, style: StrokeStyle(lineWidth: 2.4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             if problem {
-                Image(systemName: "exclamationmark").font(.system(size: 6.5, weight: .heavy))
+                Image(systemName: "exclamationmark").font(.system(size: 9, weight: .heavy))
             } else {
-                Image(logo).renderingMode(.template).resizable().aspectRatio(contentMode: .fit).frame(width: 7.5, height: 7.5)
+                Image(logo).renderingMode(.template).resizable().aspectRatio(contentMode: .fit).frame(width: 10.5, height: 10.5)
             }
         }
-        .frame(width: 15, height: 15)
+        .frame(width: 20, height: 20)
     }
 }
