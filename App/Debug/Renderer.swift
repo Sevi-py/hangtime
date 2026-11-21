@@ -1,0 +1,62 @@
+#if DEBUG
+import SwiftUI
+import AppKit
+import WidgetKit
+
+/// `Headroom --render <dir>`: renders the panel, settings panes and widgets to PNGs (light + dark)
+/// for visual review without touching the menu bar.
+@MainActor
+enum DebugRenderer {
+    static func run(dir: String) async {
+        let model = AppModel.shared
+        await model.refreshAll(includeHistory: true)
+        let out = URL(fileURLWithPath: dir)
+        try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        let state = SharedState(providers: Array(model.snapshots.values), history: model.history,
+                                visibleProviders: model.visibleProviders)
+
+        for dark in [false, true] {
+            let suffix = dark ? "dark" : "light"
+            await snap(AnyView(MenuContentView().environment(model)), size: nil, dark: dark,
+                       to: out.appendingPathComponent("panel-\(suffix).png"))
+            await snap(AnyView(SettingsView().environment(model)), size: nil, dark: dark,
+                       to: out.appendingPathComponent("settings-\(suffix).png"))
+            let widgets: [(String, CGSize, AnyView)] = [
+                ("limits-small", .init(width: 170, height: 170), AnyView(ProviderLimitsView(entry: .init(date: .now, state: state, intent: nil), config: ProviderLimitsIntent(), familyOverride: .systemSmall))),
+                ("limits-medium", .init(width: 364, height: 170), AnyView(ProviderLimitsView(entry: .init(date: .now, state: state, intent: nil), config: ProviderLimitsIntent(), familyOverride: .systemMedium))),
+                ("overview-medium", .init(width: 364, height: 170), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemMedium))),
+                ("overview-large", .init(width: 364, height: 382), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemLarge))),
+                ("overview-small", .init(width: 170, height: 170), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemSmall))),
+                ("gauge-small", .init(width: 170, height: 170), AnyView(SingleGaugeView(entry: .init(date: .now, state: state, intent: nil), config: SingleGaugeIntent()))),
+                ("chart-medium", .init(width: 364, height: 170), AnyView(ChartWidgetView(entry: .init(date: .now, state: state, intent: nil), config: ChartIntent(), familyOverride: .systemMedium))),
+                ("heatmap-medium", .init(width: 364, height: 170), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemMedium))),
+                ("heatmap-large", .init(width: 364, height: 382), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemLarge))),
+            ]
+            for (name, size, view) in widgets {
+                let framed = AnyView(view.padding(16).frame(width: size.width, height: size.height)
+                    .background(Color(nsColor: .windowBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous)))
+                await snap(framed, size: size, dark: dark, to: out.appendingPathComponent("w-\(name)-\(suffix).png"))
+            }
+        }
+    }
+
+    static func snap(_ view: AnyView, size: CGSize?, dark: Bool, to url: URL) async {
+        let host = NSHostingView(rootView: view)
+        host.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        let fitting = size ?? host.fittingSize
+        host.frame = NSRect(origin: .zero, size: fitting)
+        let window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        window.appearance = host.appearance
+        window.contentView = host
+        window.setFrameOrigin(NSPoint(x: -10000, y: -10000))
+        window.orderFrontRegardless()
+        try? await Task.sleep(for: .milliseconds(600))
+        host.layoutSubtreeIfNeeded()
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
+        host.cacheDisplay(in: host.bounds, to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(to: url)
+        window.orderOut(nil)
+    }
+}
+#endif
