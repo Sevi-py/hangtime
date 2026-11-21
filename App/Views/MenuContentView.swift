@@ -431,8 +431,6 @@ struct HistoryCard: View {
                                     weeks: 19, spacing: 2.5, metric: metric)
                         .frame(height: 100)
                 }
-                Text("Source: \(model.history.source.rawValue)\(metric == .cost ? " · API-equivalent estimate" : "")")
-                    .font(.caption2).foregroundStyle(.tertiary)
             }
         }
         .padding(12)
