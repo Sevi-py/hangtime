@@ -321,7 +321,7 @@ struct BankedResetsSection: View {
                     Text("\(snapshot.availableResetCount) banked reset\(snapshot.availableResetCount == 1 ? "" : "s")")
                         .font(.callout.weight(.medium))
                     if let soonest = snapshot.bankedResets.compactMap(\.expiresAt).min() {
-                        Text("· " + Fmt.expires(soonest).lowercased())
+                        Text("· " + Fmt.expires(soonest).lowercasingFirst)
                             .font(.caption).foregroundStyle(soonest.timeIntervalSinceNow < 3 * 86400 ? .orange : .secondary)
                     }
                     Spacer()

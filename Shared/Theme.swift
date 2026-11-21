@@ -114,3 +114,8 @@ public enum HeatmapPalette: String, CaseIterable, Identifiable, Sendable {
         HeatmapPalette(rawValue: SharedStore.defaults.string(forKey: SharedStore.Key.heatmapPalette) ?? "") ?? .violet
     }
 }
+
+public extension String {
+    /// "Expires 12 Dec" → "expires 12 Dec" (only the first letter, so month names keep their case).
+    var lowercasingFirst: String { prefix(1).lowercased() + dropFirst() }
+}

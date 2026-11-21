@@ -149,7 +149,7 @@ struct ProviderLimitsView: View {
             Image(systemName: "arrow.counterclockwise.circle.fill").foregroundStyle(snap.provider.tint)
             Text("\(snap.availableResetCount) banked reset\(snap.availableResetCount == 1 ? "" : "s")")
             if let exp = snap.bankedResets.compactMap(\.expiresAt).min() {
-                Text("· \(Fmt.expires(exp, now: entry.date).lowercased())").foregroundStyle(.secondary)
+                Text("· \(Fmt.expires(exp, now: entry.date).lowercasingFirst)").foregroundStyle(.secondary)
             }
         }
         .font(.system(size: 10, weight: .medium))

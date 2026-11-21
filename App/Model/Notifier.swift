@@ -103,7 +103,7 @@ final class Notifier {
                 if s.lowThresholdAlerts, w.remainingFraction <= s.lowThreshold, !w.isExhausted, !low.contains(lk) {
                     low.insert(lk)
                     post("low.\(lk)", "\(p.shortName): \(Fmt.percent(w.remainingFraction)) left",
-                         "\(w.title) – \(Fmt.resets(w.resetsAt).lowercased()).")
+                         "\(w.title) – \(Fmt.resets(w.resetsAt).lowercasingFirst).")
                 }
             }
 
