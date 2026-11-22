@@ -23,11 +23,11 @@ Afterwards, check that it worked:
 
 - `pgrep -x Hangtime`: the app is running.
 - `pgrep -lf HangtimeWidgets`: the widget extension runs from `/Applications/Hangtime.app`.
-- `pluginkit -m -v -i app.headroom.mac.widgets`: exactly one registration, pointing at `/Applications`.
+- `pluginkit -m -v -i app.hangtime.mac.widgets`: exactly one registration, pointing at `/Applications`.
 
 If the script fails, fix the cause. Don't fall back to a debug build in `build/`.
 
-Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/usage-widget).
+Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/hangtime).
 
 ## Project basics
 
@@ -49,8 +49,7 @@ Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/
 - Signing team is `8XX544GLPH` (Flarely e.U.). The app group is team-prefixed, so changing the team changes where
   widget-shared settings live.
 - The in-app updater (`App/Support/Updater.swift`) only accepts updates signed by that team and notarized.
-- Settings and the setup-assistant flags live in `UserDefaults` for `app.headroom.mac`; never move them, or updates
+- Settings and the setup-assistant flags live in `UserDefaults` for `app.hangtime.mac`; never move them, or updates
   would look like first launches.
-- The app was called Headroom before 1.0 and is now Hangtime. Internal identifiers keep the old name on purpose
-  (bundle IDs `app.headroom.mac*`, the app group, Keychain services, Darwin notifications, caches) so existing
-  settings, the setup state and placed widgets survive. Don't rename them.
+- Don't change the bundle IDs (`app.hangtime.mac*`), the app group, Keychain services or cache paths: users would
+  lose their settings and placed widgets.

@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>com.apple.security.application-groups</key>
-	<array><string>$(TeamIdentifierPrefix)app.headroom.shared</string></array>
+	<array><string>$(TeamIdentifierPrefix)app.hangtime.shared</string></array>
 </dict>
 </plist>

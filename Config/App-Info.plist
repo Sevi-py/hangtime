@@ -15,12 +15,12 @@
 	<key>LSMinimumSystemVersion</key><string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSUIElement</key><true/>
 	<key>NSHumanReadableCopyright</key><string></string>
-	<key>AppGroupIdentifier</key><string>$(TeamIdentifierPrefix)app.headroom.shared</string>
+	<key>AppGroupIdentifier</key><string>$(TeamIdentifierPrefix)app.hangtime.shared</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleURLName</key><string>app.headroom</string>
-			<key>CFBundleURLSchemes</key><array><string>hangtime</string><string>headroom</string></array>
+			<key>CFBundleURLName</key><string>app.hangtime</string>
+			<key>CFBundleURLSchemes</key><array><string>hangtime</string></array>
 		</dict>
 	</array>
 </dict>

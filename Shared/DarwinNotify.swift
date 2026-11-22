@@ -2,7 +2,7 @@ import Foundation
 
 /// Cross-process pings between widgets/controls and the app (works across the sandbox).
 public enum DarwinNotify {
-    public static let refresh = "app.headroom.refresh"
+    public static let refresh = "app.hangtime.refresh"
 
     public static func post(_ name: String) {
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),

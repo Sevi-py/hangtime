@@ -456,7 +456,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.headroom.mac.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hangtime.mac.widgets;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -474,7 +474,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.headroom.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hangtime.mac;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -622,7 +622,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.headroom.mac.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hangtime.mac.widgets;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -640,7 +640,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.headroom.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hangtime.mac;
 				SDKROOT = macosx;
 			};
 			name = Debug;

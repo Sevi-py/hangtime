@@ -1,6 +1,6 @@
 name: Hangtime
 options:
-  bundleIdPrefix: app.headroom
+  bundleIdPrefix: app.hangtime
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
@@ -26,7 +26,7 @@ targets:
       - path: Resources/AppIcon.icon
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.headroom.mac
+        PRODUCT_BUNDLE_IDENTIFIER: app.hangtime.mac
         INFOPLIST_FILE: Config/App-Info.plist
         CODE_SIGN_ENTITLEMENTS: Config/Hangtime.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -42,7 +42,7 @@ targets:
       - Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.headroom.mac.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: app.hangtime.mac.widgets
         INFOPLIST_FILE: Config/Widgets-Info.plist
         CODE_SIGN_ENTITLEMENTS: Config/Widgets.entitlements
         GENERATE_INFOPLIST_FILE: NO

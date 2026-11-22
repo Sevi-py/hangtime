@@ -11,12 +11,12 @@ Requires macOS 26 (Tahoe) or later.
 **Homebrew**
 
 ```sh
-brew tap sevi-py/hangtime https://github.com/Sevi-py/usage-widget
+brew tap sevi-py/hangtime https://github.com/Sevi-py/hangtime
 brew install --cask sevi-py/hangtime/hangtime
 ```
 
 **Direct download**: get `Hangtime-<version>.dmg` (or `.zip`) from
-[Releases](https://github.com/Sevi-py/usage-widget/releases/latest) and move Hangtime to Applications.
+[Releases](https://github.com/Sevi-py/hangtime/releases/latest) and move Hangtime to Applications.
 Builds are signed with Developer ID and notarized by Apple.
 
 **Updates**: Hangtime checks GitHub Releases every few hours. It installs updates the same way it was installed:
@@ -121,7 +121,7 @@ One-time setup on the release Mac:
 - Xcode signed in with an account on team `8XX544GLPH` (Flarely e.U.). Xcode uses the cloud-managed
   Developer ID certificate.
 - Notarization credentials in the Keychain:
-  `xcrun notarytool store-credentials headroom-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>`
+  `xcrun notarytool store-credentials hangtime-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>`
 - `gh` signed in with push access.
 
 The Homebrew cask lives in [`Casks/hangtime.rb`](Casks/hangtime.rb), so this repo doubles as the tap. Releases

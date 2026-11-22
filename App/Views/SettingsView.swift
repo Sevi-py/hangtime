@@ -481,7 +481,7 @@ private struct AboutSettings: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
             HStack {
-                Link("Source on GitHub", destination: URL(string: "https://github.com/Sevi-py/usage-widget")!)
+                Link("Source on GitHub", destination: URL(string: "https://github.com/Sevi-py/hangtime")!)
             }
             .padding(.top, 6)
             Spacer()

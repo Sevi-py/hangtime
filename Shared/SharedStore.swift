@@ -3,7 +3,7 @@ import Foundation
 /// Reads / writes the snapshot shared between the menu bar app and the widget extension.
 public enum SharedStore {
     public static var appGroupID: String {
-        (Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String) ?? "app.headroom.shared"
+        (Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String) ?? "app.hangtime.shared"
     }
 
     public static var containerURL: URL {
@@ -12,7 +12,7 @@ public enum SharedStore {
         }
         // Fallback (unsigned debug builds): Application Support.
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Headroom", isDirectory: true)
+            .appendingPathComponent("Hangtime", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base
     }

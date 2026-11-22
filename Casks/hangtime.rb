@@ -2,10 +2,10 @@ cask "hangtime" do
   version "0.0.0"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
-  url "https://github.com/Sevi-py/usage-widget/releases/download/v#{version}/Hangtime-#{version}.zip"
+  url "https://github.com/Sevi-py/hangtime/releases/download/v#{version}/Hangtime-#{version}.zip"
   name "Hangtime"
   desc "Menu bar app and widgets showing what's left of your AI coding subscriptions"
-  homepage "https://github.com/Sevi-py/usage-widget"
+  homepage "https://github.com/Sevi-py/hangtime"
 
   livecheck do
     url :url
@@ -28,11 +28,11 @@ cask "hangtime" do
   # is the one running the upgrade and drop the user's Open at Login choice. Hangtime restarts itself instead.
 
   zap trash: [
-    "~/Library/Application Support/Headroom",
-    "~/Library/Caches/app.headroom.mac",
-    "~/Library/Containers/app.headroom.mac.widgets",
-    "~/Library/Group Containers/8XX544GLPH.app.headroom.shared",
-    "~/Library/HTTPStorages/app.headroom.mac",
-    "~/Library/Preferences/app.headroom.mac.plist",
+    "~/Library/Application Support/Hangtime",
+    "~/Library/Caches/app.hangtime.mac",
+    "~/Library/Containers/app.hangtime.mac.widgets",
+    "~/Library/Group Containers/8XX544GLPH.app.hangtime.shared",
+    "~/Library/HTTPStorages/app.hangtime.mac",
+    "~/Library/Preferences/app.hangtime.mac.plist",
   ]
 end

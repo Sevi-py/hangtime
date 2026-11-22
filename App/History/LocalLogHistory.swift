@@ -28,7 +28,7 @@ actor LocalLogHistory {
 
     private static var cacheURL: URL {
         let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("app.headroom", isDirectory: true)
+            .appendingPathComponent("app.hangtime", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("log-history-v2.json")
     }

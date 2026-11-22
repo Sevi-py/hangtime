@@ -815,7 +815,7 @@ private struct ConnectionGraphic: View {
     }
 }
 
-/// Headroom's own icon, rendered once at the sizes setup shows it. The full icon has many layers and is
+/// Hangtime’s own icon, rendered once at the sizes setup shows it. The full icon has many layers and is
 /// expensive to draw, which made pages that redraw around it (the T3 Code page) stutter.
 @MainActor
 enum AppIconImage {

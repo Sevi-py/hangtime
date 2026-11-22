@@ -8,7 +8,7 @@
 #   - Xcode signed in with an account on team 8XX544GLPH (Flarely e.U.), so Xcode can use the cloud-managed
 #     "Developer ID Application" certificate.
 #   - Notarization credentials in the Keychain:
-#       xcrun notarytool store-credentials headroom-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>
+#       xcrun notarytool store-credentials hangtime-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>
 #   - gh authenticated with push access to the repo.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -16,8 +16,8 @@ cd "$(dirname "$0")/.."
 VERSION=${1:-}
 PUBLISH=${2:-}
 TEAM=8XX544GLPH
-PROFILE=${NOTARY_PROFILE:-headroom-notary}
-REPO=Sevi-py/usage-widget
+PROFILE=${NOTARY_PROFILE:-hangtime-notary}
+REPO=Sevi-py/hangtime
 
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "usage: $0 <major.minor.patch> [--publish]"; exit 1; }
 if [[ "$PUBLISH" == "--publish" ]]; then

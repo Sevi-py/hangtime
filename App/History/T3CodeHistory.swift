@@ -43,7 +43,7 @@ enum T3CodeHistory {
 
     // MARK: Token (stored in our own Keychain item)
 
-    private static let service = "app.headroom.t3code"
+    private static let service = "app.hangtime.t3code"
 
     static func storedToken() -> String? {
         let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
@@ -90,7 +90,7 @@ enum T3CodeHistory {
     static func revoke(command: String = "t3") async {
         var ids = Set<String>()
         if let id = sessionID { ids.insert(id) }
-        // Also clean up any other sessions of ours (e.g. from an older install, including the "Headroom" era).
+        // Also clean up any other sessions of ours (e.g. from an older install).
         for sess in await sessions(command: command) where isOurs(sess) {
             if let id = JSON.string(sess["sessionId"]) { ids.insert(id) }
         }
@@ -99,10 +99,9 @@ enum T3CodeHistory {
         sessionID = nil
     }
 
-    /// Sessions are labeled with the app name; "Headroom" was the app's name before 1.0.
+    /// Our sessions are labeled with the app name.
     private static func isOurs(_ sess: [String: Any]) -> Bool {
-        let label = JSON.string((sess["client"] as? [String: Any])?["label"])
-        return label == "Hangtime" || label == "Headroom"
+        JSON.string((sess["client"] as? [String: Any])?["label"]) == "Hangtime"
     }
 
     static func sessions(command: String = "t3") async -> [[String: Any]] {

@@ -12,7 +12,7 @@ import WidgetKit
 final class Updater {
     static let shared = Updater()
 
-    static let repo = "Sevi-py/usage-widget"
+    static let repo = "Sevi-py/hangtime"
     static let caskToken = "hangtime"
     /// Updates must be signed with this team's Developer ID (same team as release builds).
     static let teamID = "8XX544GLPH"
@@ -35,7 +35,7 @@ final class Updater {
         static let autoInstall = "updates.autoInstall"
         static let lastCheck = "updates.lastCheck"
         static let lastRunBuild = "updates.lastRunBuild"
-        static let feedOverride = "updates.feedURL"   // testing only: `defaults write app.headroom.mac updates.feedURL <url>`
+        static let feedOverride = "updates.feedURL"   // testing only: `defaults write app.hangtime.mac updates.feedURL <url>`
     }
 
     var autoCheck: Bool { didSet { d.set(autoCheck, forKey: Key.autoCheck); schedule() } }
