@@ -213,23 +213,26 @@ struct ClaudeProvider: UsageProvider {
     static var probeEnabled: Bool { UserDefaults.standard.object(forKey: probeSettingKey) as? Bool ?? true }
     /// At most one probe every 10 minutes, whether it worked or not.
     static let probeInterval: TimeInterval = 600
-    static let probeModel = "claude-haiku-5-5"
+    /// Fable's reply carries all three limits (session, weekly and Fable's own weekly share); Haiku's only the first
+    /// two, but it's the cheapest model and keeps working when Fable's own limit is used up.
+    static let fableModel = "claude-fable-5-2"
+    static let haikuModel = "claude-haiku-5-5"
 
     /// One limit as read from rate-limit headers or a logged rejection. Keys are the backend's limit names:
     /// `five_hour`, `seven_day`, `seven_day_overage_included` (the model-scoped weekly limit, e.g. Fable).
     struct LiveLimit: Codable { var used: Double; var resetsAt: Date? }
     struct LiveReading: Codable { var at: Date; var limits: [String: LiveLimit] }
 
-    /// Used while `/api/oauth/usage` is blocked. Session and weekly usage also come back as headers on every
-    /// model reply, so we ask for one token from Haiku (what Claude Code's own quota probe does) and read
-    /// them off. When the limit is used up the request is refused, and the refusal says which limit and when
-    /// it resets. Hit limits Claude Code recorded in its transcripts are used too, at no cost.
+    /// Used while `/api/oauth/usage` is blocked. Usage also comes back as headers on every model reply, so we
+    /// ask for one token (what Claude Code's own quota probe does) and read them off. When a limit is used up
+    /// the request is refused, and the refusal says which limit and when it resets. Hit limits Claude Code
+    /// recorded in its transcripts are used too, at no cost.
     private func fallback(_ base: ProviderSnapshot, token: String, version: String?) async -> ProviderSnapshot {
         let baseAt = base.status == .ok && !base.windows.isEmpty ? (base.dataAsOf ?? .distantPast) : .distantPast
         var probe: LiveReading? = nil
         if Self.probeEnabled {
             if await Self.cache.claimProbeSlot(interval: Self.probeInterval),
-               let fresh = await quotaProbe(token: token, version: version) {
+               let fresh = await probeLimits(base: base, token: token, version: version) {
                 await Self.cache.storeProbe(fresh)
             }
             probe = await Self.cache.lastProbe
@@ -266,10 +269,10 @@ struct ClaudeProvider: UsageProvider {
         case "five_hour": idx = snap.windows.firstIndex { $0.kind == .session }
         case "seven_day": idx = snap.windows.firstIndex { $0.kind == .weekly }
         case "seven_day_overage_included":
-            // Only trust a refusal for the model-scoped limit, and only when it's clear which window that is.
+            // The model-scoped weekly limit. It's the one probed with (Fable), or the only model limit we know.
             let models = snap.windows.indices.filter { snap.windows[$0].kind == .model }
-            guard limit.used >= 1, models.count == 1 else { return }
-            idx = models.first
+            idx = models.first { snap.windows[$0].scope?.lowercased() == "fable" } ?? (models.count == 1 ? models.first : nil)
+            if idx == nil && !models.isEmpty { return }
         default: return
         }
         if let i = idx {
@@ -277,7 +280,14 @@ struct ClaudeProvider: UsageProvider {
             snap.windows[i].resetsAt = reset
             snap.windows[i].isStale = stale ? true : nil
             snap.windows[i].asOf = at
-        } else if key == "five_hour" || key == "seven_day" {
+            snap.windows[i].note = nil  // the endpoint's "share of weekly" breakdown no longer matches
+        } else if key == "seven_day_overage_included" {
+            var w = UsageWindow(id: "limits.weekly_scoped.Fable", kind: .model, title: "Weekly · Fable", scope: "Fable",
+                                usedFraction: used, resetsAt: reset, duration: 7 * 86400)
+            w.isStale = stale ? true : nil
+            w.asOf = at
+            snap.windows.append(w)
+        } else {
             let session = key == "five_hour"
             var w = UsageWindow(id: session ? "limits.session.all" : "limits.weekly_all.all",
                                 kind: session ? .session : .weekly, title: session ? "Session (5h)" : "Weekly",
@@ -288,8 +298,50 @@ struct ClaudeProvider: UsageProvider {
         }
     }
 
-    /// Sends a one-token Haiku request (no thinking) and reads the unified rate-limit headers.
-    private func quotaProbe(token: String, version: String?) async -> LiveReading? {
+    /// One probe round (at most every 10 minutes):
+    /// 1. Fable, which reports session, weekly and Fable's own limit in one reply. While Fable's limit is used up
+    ///    the request is refused but still tells us when Fable resets, so we keep asking: a reset used elsewhere
+    ///    shows up on the next round.
+    /// 2. Haiku, only for what Fable didn't report: usually session and weekly while Fable is refused.
+    /// Fable is skipped when it can't tell us anything we'd show: model limits are hidden in Settings, this
+    /// account has no Fable limit, or the Fable model isn't available to it.
+    private func probeLimits(base: ProviderSnapshot, token: String, version: String?) async -> LiveReading? {
+        var limits: [String: LiveLimit] = [:]
+        if await wantsFableProbe(base: base) {
+            switch await quotaProbe(model: Self.fableModel, token: token, version: version) {
+            case .reading(let l):
+                limits = l
+                // An answered request without a Fable limit: this account doesn't have one (for now).
+                // (A refusal for another limit may leave the Fable headers out, so it proves nothing.)
+                if l["seven_day_overage_included"] == nil, !l.values.contains(where: { $0.used >= 1 }) {
+                    await Self.cache.skipFable(for: 86400)
+                }
+            case .modelUnavailable:
+                await Self.cache.skipFable(for: 86400)
+            case .failed:
+                break
+            }
+        }
+        if limits["five_hour"] == nil || limits["seven_day"] == nil,
+           case .reading(let l) = await quotaProbe(model: Self.haikuModel, token: token, version: version) {
+            for key in ["five_hour", "seven_day"] where limits[key] == nil { limits[key] = l[key] }
+        }
+        return limits.isEmpty ? nil : LiveReading(at: .now, limits: limits)
+    }
+
+    private func wantsFableProbe(base: ProviderSnapshot) async -> Bool {
+        if UserDefaults.standard.object(forKey: "showModelLimits") as? Bool == false { return false }
+        if let until = await Self.cache.fableSkippedUntil, until > .now { return false }
+        // The last regular check listed this account's limits, and there was no model-specific one.
+        if base.status == .ok, !base.windows.isEmpty, !base.windows.contains(where: { $0.kind == .model }) { return false }
+        return true
+    }
+
+    enum ProbeOutcome { case reading([String: LiveLimit]), modelUnavailable, failed }
+
+    /// Sends a one-token request with as little thinking as the model allows and reads the unified
+    /// rate-limit headers.
+    private func quotaProbe(model: String, token: String, version: String?) async -> ProbeOutcome {
         var req = URLRequest(url: Self.base.appendingPathComponent("v1/messages"), timeoutInterval: 20)
         req.httpMethod = "POST"
         Self.authorize(&req, token: token, version: version)
@@ -298,31 +350,31 @@ struct ClaudeProvider: UsageProvider {
         req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         req.setValue("cli", forHTTPHeaderField: "x-app")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = [
-            "model": Self.probeModel, "max_tokens": 1, "thinking": ["type": "disabled"],
+        var body: [String: Any] = [
+            "model": model, "max_tokens": 1,
             "system": [["type": "text", "text": "You are Claude Code, Anthropic's official CLI for Claude."]],
             "messages": [["role": "user", "content": "quota"]],
         ]
+        // Haiku can turn thinking off; Fable only takes an effort level (low = no thinking tokens for this).
+        if model == Self.haikuModel { body["thinking"] = ["type": "disabled"] } else { body["output_config"] = ["effort": "low"] }
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
         guard let (_, resp) = try? await URLSession.shared.data(for: req),
-              let http = resp as? HTTPURLResponse else { return nil }
+              let http = resp as? HTTPURLResponse else { return .failed }
         func header(_ name: String) -> String? { http.value(forHTTPHeaderField: "anthropic-ratelimit-unified-\(name)") }
         func date(_ name: String) -> Date? { header(name).flatMap(Double.init).map { Date(timeIntervalSince1970: $0) } }
 
         var limits: [String: LiveLimit] = [:]
         for (key, claim) in [("five_hour", "5h"), ("seven_day", "7d"), ("seven_day_overage_included", "7d_oi")] {
-            let util = header("\(claim)-utilization").flatMap(Double.init)
-            let status = header("\(claim)-status")
-            guard util != nil || status != nil else { continue }
-            // The model-scoped share isn't a plain percentage of its own limit; only a refusal is unambiguous.
-            if key == "seven_day_overage_included" && status != "rejected" { continue }
-            limits[key] = LiveLimit(used: status == "rejected" ? 1 : (util ?? 0), resetsAt: date("\(claim)-reset"))
+            let rejected = header("\(claim)-status") == "rejected"
+            guard let used = rejected ? 1 : header("\(claim)-utilization").flatMap(Double.init) else { continue }
+            limits[key] = LiveLimit(used: used, resetsAt: date("\(claim)-reset"))
         }
         // Out of usage: the request is refused, and the headers say which limit and until when.
         if header("status") == "rejected", let claim = header("representative-claim") {
             limits[claim] = LiveLimit(used: 1, resetsAt: limits[claim]?.resetsAt ?? date("reset"))
         }
-        return limits.isEmpty ? nil : LiveReading(at: .now, limits: limits)
+        if !limits.isEmpty { return .reading(limits) }
+        return [400, 403, 404].contains(http.statusCode) ? .modelUnavailable : .failed
     }
 
     /// Limits Claude Code ran into, from its transcripts (`apiError: usage_limit_reached`). Only entries newer
@@ -694,7 +746,10 @@ final class ClaudeCache: @unchecked Sendable {
     }
 
     /// After a redeem/login we want fresh numbers, but never ignore a server backoff.
-    func invalidate() async { sync { at = nil; probeAttempt = nil } }
+    func invalidate() async {
+        sync { at = nil; probeAttempt = nil; fableSkip = nil }
+        UserDefaults.standard.removeObject(forKey: "claude.fableSkipUntil")
+    }
 
     // Quota probe (fallback while the usage endpoint is blocked). Persisted so relaunches respect the interval.
     private var probe: ClaudeProvider.LiveReading? = UserDefaults.standard.data(forKey: "claude.probe")
@@ -702,6 +757,15 @@ final class ClaudeCache: @unchecked Sendable {
     private var probeAttempt: Date? = UserDefaults.standard.object(forKey: "claude.probeAttemptAt") as? Date
 
     var lastProbe: ClaudeProvider.LiveReading? { get async { sync { probe } } }
+
+    /// Set when a Fable probe can't help (no Fable limit on this account, or no access to the model).
+    private var fableSkip: Date? = UserDefaults.standard.object(forKey: "claude.fableSkipUntil") as? Date
+    var fableSkippedUntil: Date? { get async { sync { fableSkip } } }
+    func skipFable(for seconds: TimeInterval) async {
+        let until = Date.now.addingTimeInterval(seconds)
+        sync { fableSkip = until }
+        UserDefaults.standard.set(until, forKey: "claude.fableSkipUntil")
+    }
 
     /// True (and records the attempt) when no probe was sent within `interval`.
     func claimProbeSlot(interval: TimeInterval) async -> Bool {

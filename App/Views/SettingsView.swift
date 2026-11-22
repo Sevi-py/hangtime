@@ -203,7 +203,7 @@ private struct ProviderDetail: View {
                 } header: {
                     Text("Usage checks")
                 } footer: {
-                    Text("Anthropic often blocks usage checks for a while. Headroom then sends a one-token Haiku request, at most every 10 minutes, and reads your session and weekly usage from the reply. It uses a tiny bit of your session, and starts a new session if none is running. Model limits like Fable and banked resets update once regular checks work again.")
+                    Text("Anthropic often blocks usage checks for a while. Headroom then sends a one-token request, at most every 10 minutes, and reads your limits from the reply: Fable for session, weekly and Fable usage, and Haiku when Fable is used up or not needed. It uses a tiny bit of your session, and starts a new session if none is running. Banked resets update once regular checks work again.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
