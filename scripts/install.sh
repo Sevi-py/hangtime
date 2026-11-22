@@ -26,5 +26,13 @@ pluginkit -a /Applications/Headroom.app/Contents/PlugIns/HeadroomWidgets.appex 2
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Headroom.app >/dev/null 2>&1 || true
 killall chronod 2>/dev/null || true
 
+# Remove the app bundles left in build/ (Release and any Debug ones), so Spotlight, Launchpad and
+# LaunchServices only ever know the copy in /Applications. Intermediates stay for incremental builds.
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+for stale in build/Build/Products/*/Headroom.app(N) build/*/Build/Products/*/Headroom.app(N); do
+  "$LSREGISTER" -u "$stale" >/dev/null 2>&1 || true
+  rm -rf "$stale"
+done
+
 open /Applications/Headroom.app
 echo "Installed Headroom build $BUILD"
