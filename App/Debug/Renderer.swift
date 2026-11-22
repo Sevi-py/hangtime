@@ -15,6 +15,17 @@ enum DebugRenderer {
         let state = SharedState(providers: Array(model.snapshots.values), history: model.history,
                                 visibleProviders: model.visibleProviders)
 
+        let items: [(ProviderID, UsageWindow?, Bool)] = model.visibleProviders.map { p in
+            let snap = model.snapshots[p]
+            return (p, snap.flatMap { model.settings.menuBarWindow.pick(from: $0) }, snap?.status.isProblem ?? false)
+        }
+        for style in [MenuBarStyle.rings, .perProvider] {
+            let img = MenuBarLabel.render(items: items, style: style, showReset: false)
+            if let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
+                try? rep.representation(using: .png, properties: [:])?.write(to: out.appendingPathComponent("menubar-\(style.rawValue).png"))
+            }
+        }
+
         for dark in [false, true] {
             let suffix = dark ? "dark" : "light"
             await snap(AnyView(MenuContentView().environment(model)), size: nil, dark: dark,
@@ -30,6 +41,8 @@ enum DebugRenderer {
                 ("limits-medium", .init(width: 364, height: 170), AnyView(ProviderLimitsView(entry: .init(date: .now, state: state, intent: nil), config: ProviderLimitsIntent(), familyOverride: .systemMedium))),
                 ("overview-medium", .init(width: 364, height: 170), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemMedium))),
                 ("overview-large", .init(width: 364, height: 382), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemLarge))),
+                ("overview-large-square", .init(width: 344, height: 344), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemLarge))),
+                ("overview-medium-short", .init(width: 344, height: 150), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemMedium))),
                 ("overview-small", .init(width: 170, height: 170), AnyView(OverviewView(entry: .init(date: .now, state: state, intent: nil), config: OverviewIntent(), familyOverride: .systemSmall))),
                 ("gauge-small", .init(width: 170, height: 170), AnyView(SingleGaugeView(entry: .init(date: .now, state: state, intent: nil), config: SingleGaugeIntent()))),
                 ("chart-medium", .init(width: 364, height: 170), AnyView(ChartWidgetView(entry: .init(date: .now, state: state, intent: nil), config: ChartIntent(), familyOverride: .systemMedium))),

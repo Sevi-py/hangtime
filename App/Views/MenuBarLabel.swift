@@ -69,7 +69,7 @@ private struct LabelContent: View {
         }
         .font(.system(size: 12, weight: .medium).monospacedDigit())
         .foregroundStyle(.black)
-        .padding(.horizontal, 1)
+        .padding(.horizontal, style == .rings && !items.isEmpty ? 0 : 1)
         .frame(height: 21)
     }
 
@@ -94,17 +94,21 @@ private struct MiniRing: View {
     var problem: Bool
 
     var body: some View {
+        // Strokes are inset so the whole ring stays inside the 21pt label (a centred stroke got clipped at the bottom).
+        let lw: CGFloat = 1.9
         ZStack {
-            Circle().stroke(.black.opacity(0.28), lineWidth: 2.4)
-            Circle().trim(from: 0, to: remaining)
-                .stroke(.black, style: StrokeStyle(lineWidth: 2.4, lineCap: .round))
+            Circle().inset(by: lw / 2).stroke(.black.opacity(0.28), lineWidth: lw)
+            Circle().inset(by: lw / 2).trim(from: 0, to: remaining)
+                .stroke(.black, style: StrokeStyle(lineWidth: lw, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             if problem {
-                Image(systemName: "exclamationmark").font(.system(size: 9, weight: .heavy))
+                Image(systemName: "exclamationmark").font(.system(size: 11, weight: .heavy))
             } else {
-                Image(logo).renderingMode(.template).resizable().aspectRatio(contentMode: .fit).frame(width: 10.5, height: 10.5)
+                Image(logo).renderingMode(.template).resizable().aspectRatio(contentMode: .fit)
+                    // Antigravity's mark fills its whole box, so it needs a little more room from the ring.
+                    .frame(width: logo == ProviderID.antigravity.logo ? 11 : 12.5, height: logo == ProviderID.antigravity.logo ? 11 : 12.5)
             }
         }
-        .frame(width: 20, height: 20)
+        .frame(width: 21, height: 21)
     }
 }

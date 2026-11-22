@@ -333,6 +333,14 @@ public struct ActivityHeatmap: View {
         }
     }
 
+    /// Width / height of the grid at a typical cell size, so callers can size it without empty space below.
+    public static func aspectRatio(weeks: Int, spacing: CGFloat, showLabels: Bool) -> CGFloat {
+        let cell: CGFloat = 11
+        let w = (showLabels ? 24 : 0) + CGFloat(weeks) * cell + spacing * CGFloat(weeks - 1)
+        let h = (showLabels ? 12 : 0) + 7 * cell + spacing * 6
+        return w / h
+    }
+
     private func level(_ value: Double, max: Double) -> Double {
         guard value > 0, max > 0 else { return 0 }
         // 4 buckets like GitHub, scaled with sqrt so light days still show.

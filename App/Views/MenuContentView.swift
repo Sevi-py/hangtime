@@ -285,12 +285,16 @@ struct ResetAlertToggle: View {
             model.toggleResetAlert(provider, window: window)
             armed.toggle()
         } label: {
-            Label(armed ? "You'll be notified when it resets" : "Notify me when it resets",
-                  systemImage: armed ? "bell.fill" : "bell")
-                .font(.caption)
+            Label {
+                Text(armed ? "You'll be notified when it resets" : "Notify me when it resets")
+                    .foregroundStyle(armed ? .primary : .secondary)
+            } icon: {
+                Image(systemName: armed ? "bell.fill" : "bell")
+                    .foregroundStyle(armed ? Color.accentColor : .secondary)
+            }
+            .font(.caption.weight(armed ? .medium : .regular))
         }
         .buttonStyle(.borderless)
-        .tint(armed ? .accentColor : .secondary)
         .onAppear { armed = Notifier.shared.isArmed(provider, window) }
     }
 }

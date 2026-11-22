@@ -114,6 +114,8 @@ struct ProviderLimitsView: View {
                                     } else { Text("Not started") }
                                 }
                                 .font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -244,30 +246,88 @@ struct OverviewView: View {
                 }
             }
             .frame(maxHeight: .infinity)
-        } else {
-            VStack(alignment: .leading, spacing: family == .systemLarge ? 10 : 8) {
-                ForEach(snaps.prefix(family == .systemLarge ? 4 : 3)) { s in
-                    VStack(alignment: .leading, spacing: 5) {
-                        WidgetHeader(provider: s.provider, snapshot: s, compact: family == .systemMedium)
-                        if !usable(s) {
-                            Text(s.status == .loggedOut ? "Signed out – open Headroom to sign in" : "No data")
-                                .font(.caption2).foregroundStyle(.orange)
-                        } else if family == .systemLarge && config.showAll {
-                            ForEach(s.sortedWindows) { w in
-                                WindowRow(window: w, provider: s.provider, showPace: showPace,
-                                          colorByProvider: globalByProvider, compact: true, now: entry.date)
-                            }
-                        } else {
-                            HStack(spacing: 10) {
-                                ForEach([s.session, s.weekly].compactMap { $0 }.prefix(2)) { w in
-                                    WindowRow(window: w, provider: s.provider, showPace: showPace,
-                                              colorByProvider: globalByProvider, compact: true, now: entry.date)
-                                }
-                            }
-                        }
+        } else if family == .systemLarge {
+            // Use the richest layout that fits; with many providers/limits fall back to denser ones.
+            ViewThatFits(in: .vertical) {
+                if config.showAll {
+                    headered(snaps, spacing: 10) { s in
+                        ForEach(s.sortedWindows) { w in row(w, s, showPace) }
+                    }
+                    headered(snaps, spacing: 8) { s in
+                        grid(s.sortedWindows, s, showPace)
                     }
                 }
-                Spacer(minLength: 0)
+                headered(snaps, spacing: 10) { s in grid(pair(s), s, showPace) }
+                compactRows(snaps, spacing: 8, showPace)
+            }
+            .frame(maxHeight: .infinity, alignment: .top)
+        } else {
+            ViewThatFits(in: .vertical) {
+                headered(snaps, spacing: 8) { s in grid(pair(s), s, showPace) }
+                compactRows(snaps, spacing: 8, showPace)
+                compactRows(Array(snaps.prefix(4)), spacing: 6, showPace)
+            }
+            .frame(maxHeight: .infinity, alignment: .top)
+        }
+    }
+
+    /// Session + weekly, or the first two limits for CLIs that have neither (e.g. per-model quotas).
+    private func pair(_ s: ProviderSnapshot) -> [UsageWindow] {
+        var p = [s.session, s.weekly].compactMap { $0 }
+        for w in s.sortedWindows where p.count < 2 && !p.contains(where: { $0.id == w.id }) { p.append(w) }
+        return p
+    }
+
+    private func row(_ w: UsageWindow, _ s: ProviderSnapshot, _ showPace: Bool) -> some View {
+        WindowRow(window: w, provider: s.provider, showPace: showPace,
+                  colorByProvider: globalByProvider, compact: true, now: entry.date)
+    }
+
+    /// Half-width rows: "Weekly · Gemini 3.8 Flash" → "Gemini 3.8 Flash" so it isn't truncated.
+    private func short(_ w: UsageWindow) -> UsageWindow {
+        var w = w
+        if let scope = w.scope { w.title = scope }
+        return w
+    }
+
+    /// Limits two per line.
+    private func grid(_ windows: [UsageWindow], _ s: ProviderSnapshot, _ showPace: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            ForEach(Array(stride(from: 0, to: windows.count, by: 2)), id: \.self) { i in
+                HStack(spacing: 10) {
+                    row(short(windows[i]), s, showPace)
+                    if i + 1 < windows.count { row(short(windows[i + 1]), s, showPace) } else { Color.clear.frame(maxWidth: .infinity, maxHeight: 1) }
+                }
+            }
+        }
+    }
+
+    private func unavailable(_ s: ProviderSnapshot) -> some View {
+        Text(s.status == .loggedOut ? "Signed out – open Headroom to sign in" : "No data")
+            .font(.caption2).foregroundStyle(.orange).lineLimit(1)
+    }
+
+    /// One block per provider: header line, then its limits.
+    private func headered<C: View>(_ snaps: [ProviderSnapshot], spacing: CGFloat,
+                                   @ViewBuilder content: @escaping (ProviderSnapshot) -> C) -> some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(snaps) { s in
+                VStack(alignment: .leading, spacing: 5) {
+                    WidgetHeader(provider: s.provider, snapshot: s, compact: family == .systemMedium)
+                    if usable(s) { content(s) } else { unavailable(s) }
+                }
+            }
+        }
+    }
+
+    /// Densest layout: the provider's icon followed by its two main limits on one line.
+    private func compactRows(_ snaps: [ProviderSnapshot], spacing: CGFloat, _ showPace: Bool) -> some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            ForEach(snaps) { s in
+                HStack(spacing: 8) {
+                    ProviderGlyph(s.provider, size: 14).frame(width: 16)
+                    if usable(s) { grid(pair(s), s, showPace) } else { unavailable(s); Spacer(minLength: 0) }
+                }
             }
         }
     }
@@ -366,9 +426,10 @@ struct HeatmapWidgetView: View {
             ActivityHeatmap(totals: h.dailyTotals(metric: metric, providers: providers), weeks: weeks, tint: tint,
                             spacing: family == .systemSmall ? 2 : 3, showLabels: family != .systemSmall,
                             metric: metric, now: entry.date)
-                .frame(maxHeight: family == .systemLarge ? 150 : .infinity)
+                .aspectRatio(family == .systemLarge ? ActivityHeatmap.aspectRatio(weeks: weeks, spacing: 3, showLabels: true) : nil,
+                             contentMode: .fit)
             if family == .systemLarge {
-                Divider().padding(.vertical, 4)
+                Divider().padding(.vertical, 2)
                 DailyUsageChart(points: h.series(lastDays: 30, metric: metric, providers: providers, now: entry.date),
                                 metric: metric, showAxes: true)
             }
