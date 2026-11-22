@@ -11,11 +11,10 @@
 
 <p align="center">
   <a href="https://github.com/Sevi-py/hangtime/releases/latest"><img src="https://img.shields.io/github/v/release/Sevi-py/hangtime?label=release&color=blue" alt="Latest release"></a>
-  <a href="https://github.com/Sevi-py/hangtime/releases"><img src="https://img.shields.io/github/downloads/Sevi-py/hangtime/total?color=blue" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/macOS-26%20Tahoe%2B-black?logo=apple" alt="macOS 26 Tahoe or later">
   <a href="https://github.com/Sevi-py/homebrew-tap"><img src="https://img.shields.io/badge/homebrew-sevi--py%2Ftap-FBB040?logo=homebrew&logoColor=white" alt="Homebrew tap"></a>
   <a href="https://github.com/Sevi-py/hangtime/actions/workflows/ci.yml"><img src="https://github.com/Sevi-py/hangtime/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/Sevi-py/hangtime?color=lightgrey" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT license"></a>
 </p>
 
 <p align="center">
