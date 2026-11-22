@@ -914,6 +914,14 @@ private struct PreferencesPage: View {
                             }
                         }
                     }
+                    if s.menuBarStyle == .percent || s.menuBarStyle == .perProvider {
+                        Toggle(isOn: $s.menuBarShowsResetTime) {
+                            Text("Show the time until reset when a limit is used up")
+                                .font(.callout)
+                        }
+                        .toggleStyle(.checkbox)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                     HStack {
                         Text("Show").font(.callout).foregroundStyle(.secondary)
                         Picker("Show", selection: $s.menuBarWindow) {
@@ -961,7 +969,7 @@ private struct StyleChoice: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Image(nsImage: MenuBarLabel.render(items: items, style: style, showReset: false))
+                Image(nsImage: MenuBarLabel.render(items: items, style: style, showReset: model.settings.menuBarShowsResetTime))
                     .renderingMode(.template)
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)

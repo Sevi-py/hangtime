@@ -80,7 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let d = UserDefaults.standard
                 for k in [SetupAssistant.completedKey, SetupAssistant.loginItemKey, "t3AccessRevoked",
                           "notifyWhenAnyLimitResets", "lowThresholdAlerts", "notifyResetExpiry", "notifyLoggedOut",
-                          "armedResetAlertsV2", "lowAlerted"] {
+                          "armedResetAlertsV2", "lowAlerted", "menuBarShowsResetTime"] {
                     d.removeObject(forKey: k)
                 }
                 d.synchronize()
