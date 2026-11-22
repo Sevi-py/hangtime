@@ -20,15 +20,21 @@ REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 SHA=$(shasum -a 256 "$ZIP" | awk '{print $1}')
 
 git fetch -q --tags origin
-if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
-  echo "Tag v$VERSION already exists."; exit 1
+if gh release view "v$VERSION" --repo "$REPO" >/dev/null 2>&1; then
+  echo "v$VERSION is already released."; exit 1
 fi
-PREV=$(git tag --list 'v*' --sort=-v:refname | head -1)
+PREV=$(git tag --list 'v*' --sort=-v:refname | grep -vx "v$VERSION" | head -1 || true)
 
-git tag -a "v$VERSION" -m "Hangtime $VERSION"
-git push -q origin "v$VERSION"
+# A run that failed after tagging left the tag behind: reuse it instead of tagging again.
+if ! git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+  git tag -a "v$VERSION" -m "Hangtime $VERSION"
+  git push -q origin "v$VERSION"
+fi
+# zsh doesn't word-split expansions, so optional flags go in an array.
+notes=(--generate-notes)
+[[ -n "$PREV" ]] && notes+=(--notes-start-tag "$PREV")
 gh release create "v$VERSION" "$ZIP" "$DMG" "$DIST/SHA256SUMS" --repo "$REPO" --title "Hangtime $VERSION" \
-  --verify-tag --generate-notes ${PREV:+--notes-start-tag "$PREV"}
+  --verify-tag "${notes[@]}"
 
 # Point the cask in the tap at the new release.
 TAP=$(mktemp -d)
