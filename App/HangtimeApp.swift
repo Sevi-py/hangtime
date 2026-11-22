@@ -8,7 +8,9 @@ struct HangtimeApp: App {
     @State private var launch = LaunchState.shared
 
     var body: some Scene {
-        MenuBarExtra(isInserted: $launch.menuBarVisible) {
+        // Read-only on purpose: with the .window style, SwiftUI writes `false` back into this binding when the
+        // panel closes, which removed the item from the menu bar after the panel was opened once.
+        MenuBarExtra(isInserted: Binding(get: { launch.menuBarVisible }, set: { _ in })) {
             MenuContentView()
                 .environment(model)
         } label: {
