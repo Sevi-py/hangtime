@@ -264,32 +264,44 @@ final class Updater {
     }
 
     /// Quits, re-registers the widget extension, restarts the widget host and opens the (new) app.
-    /// Runs from a detached shell so it outlives this process.
     func relaunch(after version: String?) {
-        let app = Bundle.main.bundleURL.path
+        if !Self.handOff(open: Bundle.main.bundleURL, justInstalled: version) {
+            phase = .failed("Could not restart")
+        }
+    }
+
+    /// Hands over to a detached shell (so it outlives this process) that waits for this process to quit,
+    /// optionally runs `whileStopped` (e.g. `brew upgrade`), re-registers `app` and its widget extension,
+    /// restarts the widget host, opens `app` and finally runs `afterOpen`. Terminates this app on success.
+    /// Inside the snippets, `$1` is the app path.
+    @discardableResult
+    static func handOff(open app: URL, whileStopped: String = "", afterOpen: String = "",
+                        justInstalled version: String? = nil) -> Bool {
         let pid = ProcessInfo.processInfo.processIdentifier
         let script = """
         while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done
+        \(whileStopped)
         pkill -f 'HangtimeWidgets.appex' 2>/dev/null
         /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$1" >/dev/null 2>&1
         pluginkit -a "$1/Contents/PlugIns/HangtimeWidgets.appex" 2>/dev/null
         killall chronod 2>/dev/null
         sleep 0.5
         open "$1"
+        \(afterOpen)
         """
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/sh")
-        p.arguments = ["-c", script, "hangtime-relaunch", app]
+        p.arguments = ["-c", script, "hangtime-relaunch", app.path]
         p.standardOutput = FileHandle.nullDevice
         p.standardError = FileHandle.nullDevice
-        do {
-            try p.run()
-        } catch {
-            phase = .failed("Could not restart: \(error.localizedDescription)")
-            return
-        }
-        if let version { d.set(version, forKey: "updates.justInstalled") }
+        var env = ProcessInfo.processInfo.environment
+        env["HOMEBREW_NO_ENV_HINTS"] = "1"
+        env["NONINTERACTIVE"] = "1"
+        p.environment = env
+        do { try p.run() } catch { return false }
+        if let version { UserDefaults.standard.set(version, forKey: "updates.justInstalled") }
         NSApp.terminate(nil)
+        return true
     }
 
     /// Set by `relaunch(after:)`; read once on the next launch to tell the user what happened.

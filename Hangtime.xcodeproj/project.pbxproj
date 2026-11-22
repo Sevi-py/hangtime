@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0DACD2B03D80902D15FEEDB6 /* GrokProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008317DBE506599BFEB7CD5D /* GrokProvider.swift */; };
+		0FC89E73B6DEE430348AD0D8 /* SelfInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A134948A41934B677E5D50 /* SelfInstaller.swift */; };
 		11FDC08329F118D34AC0CCE9 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCB33FEE064A52A7A7ED5F5 /* WidgetIntents.swift */; };
 		149AE72823B0BB42AFC56E15 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCB33FEE064A52A7A7ED5F5 /* WidgetIntents.swift */; };
 		175242A8F70F6F05366568A0 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A095713AD89B088298519D20 /* SwiftUI.framework */; };
@@ -111,6 +112,7 @@
 		B49294D5260B4D6F70FCC69A /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		BC471FE60F0C0253623474D1 /* UsageWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageWidgets.swift; sourceTree = "<group>"; };
 		BD1A4B5408CB2AA66073D3E0 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		C1A134948A41934B677E5D50 /* SelfInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfInstaller.swift; sourceTree = "<group>"; };
 		C5DFFBEFE339C3C07F433CB7 /* UpdateViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateViews.swift; sourceTree = "<group>"; };
 		CEC0907A55AD6CEE48A1C982 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		D5047CC4D476CEA15F434CB3 /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
@@ -197,6 +199,7 @@
 		8A848D6311A5DCA70913F7D4 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				C1A134948A41934B677E5D50 /* SelfInstaller.swift */,
 				D5047CC4D476CEA15F434CB3 /* Shell.swift */,
 				F0BF2B2AB1807D8CADCA6B63 /* Updater.swift */,
 			);
@@ -402,6 +405,7 @@
 				D1965DD051F902E55A155867 /* OverlayScroller.swift in Sources */,
 				B42FB2ECE40C24A1C593F3D9 /* Pricing.swift in Sources */,
 				BA451A96984E69017857A730 /* Renderer.swift in Sources */,
+				0FC89E73B6DEE430348AD0D8 /* SelfInstaller.swift in Sources */,
 				3A8EF4296BFECA6BD12A2D38 /* Settings.swift in Sources */,
 				ED32F26F9C319F32BE449E61 /* SettingsView.swift in Sources */,
 				606BB904B61536ACC21F7882 /* SetupView.swift in Sources */,

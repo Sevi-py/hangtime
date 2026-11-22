@@ -5,9 +5,10 @@ import AppKit
 struct HangtimeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var model = AppModel.shared
+    @State private var launch = LaunchState.shared
 
     var body: some Scene {
-        MenuBarExtra {
+        MenuBarExtra(isInserted: $launch.menuBarVisible) {
             MenuContentView()
                 .environment(model)
         } label: {
@@ -90,6 +91,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         Task { @MainActor in
+            // Opened from a download (DMG, Downloads): install over the existing copy and hand over to it.
+            if SelfInstaller.run() { return }
+            SelfInstaller.finishPendingCleanup()
             let firstLaunch = SetupAssistant.needsSetup()
             AppModel.shared.start()
             Updater.shared.start()
