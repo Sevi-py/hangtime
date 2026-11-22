@@ -50,7 +50,17 @@ enum DebugRenderer {
                 ("heatmap-large-square", .init(width: 344, height: 344), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemLarge))),
                 ("heatmap-large", .init(width: 364, height: 382), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemLarge))),
             ]
-            for (name, size, view) in widgets {
+            var variants = widgets
+            // The All Providers layout with fewer providers, to check it fills the space either way.
+            for n in 1..<max(1, state.visibleProviders.count) {
+                var sub = state
+                sub.visibleProviders = Array(state.visibleProviders.prefix(n))
+                for (fam, label, size) in [(WidgetFamily.systemMedium, "medium", CGSize(width: 364, height: 170)),
+                                           (.systemLarge, "large", CGSize(width: 364, height: 382))] {
+                    variants.append(("overview-\(label)-\(n)p", size, AnyView(OverviewView(entry: .init(date: .now, state: sub, intent: nil), config: OverviewIntent(), familyOverride: fam))))
+                }
+            }
+            for (name, size, view) in variants {
                 let framed = AnyView(view.padding(16).frame(width: size.width, height: size.height)
                     .background(Color(nsColor: .windowBackgroundColor))
                     .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous)))

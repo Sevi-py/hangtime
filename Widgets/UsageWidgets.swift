@@ -251,30 +251,55 @@ struct OverviewView: View {
                 }
             }
             .frame(maxHeight: .infinity)
-        } else if family == .systemLarge {
-            // Use the richest layout that fits; with many providers/limits fall back to denser ones.
+        } else {
+            // Try the most spacious layout first and fall back to denser ones until everything fits:
+            // providers further up get their limits on rows of their own first, the rest share a row
+            // two by two. Whatever height is left is spread above, between and below the providers.
+            let large = family == .systemLarge
+            let gap: CGFloat = large ? 10 : 8
             ViewThatFits(in: .vertical) {
-                if config.showAll {
-                    headered(snaps, spacing: 10) { s in
-                        ForEach(s.sortedWindows) { w in row(w, s, showPace) }
-                    }
-                    headered(snaps, spacing: 8) { s in
-                        grid(s.sortedWindows, s, showPace)
+                ForEach(candidates(snaps)) { c in
+                    if c.compact {
+                        compactRows(Array(snaps.prefix(c.maxProviders ?? snaps.count)), split: c.split, spacing: c.gap ?? gap, showPace)
+                    } else {
+                        blocks(snaps, all: c.all, split: c.split, spacing: gap, showPace)
                     }
                 }
-                headered(snaps, spacing: 10) { s in grid(pair(s), s, showPace) }
-                compactRows(snaps, spacing: 8, showPace)
-            }
-            .frame(maxHeight: .infinity, alignment: .top)
-        } else {
-            ViewThatFits(in: .vertical) {
-                headered(snaps, spacing: 8) { s in grid(pair(s), s, showPace) }
-                compactRows(snaps, spacing: 8, showPace)
-                compactRows(Array(snaps.prefix(4)), spacing: 6, showPace)
             }
             .frame(maxHeight: .infinity, alignment: .top)
         }
     }
+
+    /// One way to lay out the providers, from roomiest to densest.
+    private struct Candidate: Identifiable {
+        var id: Int
+        var all = false                    // every limit (large + "Show all") or just the main pair
+        var split: Set<ProviderID> = []    // providers whose limits each get a row of their own
+        var compact = false                // icon + main pair on one line, no header
+        var maxProviders: Int? = nil
+        var gap: CGFloat? = nil
+    }
+
+    private func candidates(_ snaps: [ProviderSnapshot]) -> [Candidate] {
+        var out: [Candidate] = []
+        func add(_ c: Candidate) { var c = c; c.id = out.count; out.append(c) }
+        let sets: [Bool] = family == .systemLarge && config.showAll ? [true, false] : [false]
+        for all in sets {
+            // Only providers with two or more limits can be split; split them top-down.
+            let splittable = snaps.filter { usable($0) && limits($0, all: all).count >= 2 }.map(\.provider)
+            for k in stride(from: splittable.count, through: 0, by: -1) {
+                add(Candidate(id: 0, all: all, split: Set(splittable.prefix(k))))
+            }
+        }
+        let pairSplittable = snaps.filter { usable($0) && $0.mainPair.count >= 2 }.map(\.provider)
+        for k in stride(from: pairSplittable.count, through: 0, by: -1) {
+            add(Candidate(id: 0, split: Set(pairSplittable.prefix(k)), compact: true))
+        }
+        if family == .systemMedium { add(Candidate(id: 0, compact: true, maxProviders: 4, gap: 6)) }
+        return out
+    }
+
+    private func limits(_ s: ProviderSnapshot, all: Bool) -> [UsageWindow] { all ? s.sortedWindows : s.mainPair }
 
     private func pair(_ s: ProviderSnapshot) -> [UsageWindow] { s.mainPair }
 
@@ -307,31 +332,77 @@ struct OverviewView: View {
             .font(.caption2).foregroundStyle(.orange).lineLimit(1)
     }
 
-    /// One block per provider: header line, then its limits.
-    private func headered<C: View>(_ snaps: [ProviderSnapshot], spacing: CGFloat,
-                                   @ViewBuilder content: @escaping (ProviderSnapshot) -> C) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(snaps.enumerated()), id: \.element.id) { i, s in
-                // Flexible gaps spread the providers over the widget instead of leaving a blank strip below.
-                if i > 0 { Spacer(minLength: spacing).frame(maxHeight: spacing + 8) }
+    /// One block per provider: header line, then its limits, one per row (split) or two per row.
+    private func blocks(_ snaps: [ProviderSnapshot], all: Bool, split: Set<ProviderID>,
+                        spacing: CGFloat, _ showPace: Bool) -> some View {
+        SpreadStack(minGap: spacing) {
+            ForEach(snaps) { s in
                 VStack(alignment: .leading, spacing: 5) {
                     WidgetHeader(provider: s.provider, snapshot: s, compact: family == .systemMedium)
-                    if usable(s) { content(s) } else { unavailable(s) }
+                    if !usable(s) {
+                        unavailable(s)
+                    } else if split.contains(s.provider) {
+                        ForEach(limits(s, all: all)) { w in row(w, s, showPace) }
+                    } else {
+                        grid(limits(s, all: all), s, showPace)
+                    }
                 }
             }
         }
     }
 
-    /// Densest layout: the provider's icon followed by its two main limits on one line.
-    private func compactRows(_ snaps: [ProviderSnapshot], spacing: CGFloat, _ showPace: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(snaps.enumerated()), id: \.element.id) { i, s in
-                if i > 0 { Spacer(minLength: spacing).frame(maxHeight: spacing + 8) }
+    /// Denser layout without headers: the provider's icon next to its two main limits.
+    private func compactRows(_ snaps: [ProviderSnapshot], split: Set<ProviderID> = [], spacing: CGFloat,
+                             _ showPace: Bool) -> some View {
+        SpreadStack(minGap: spacing) {
+            ForEach(snaps) { s in
                 HStack(spacing: 8) {
                     ProviderGlyph(s.provider, size: 14).frame(width: 16)
-                    if usable(s) { grid(pair(s), s, showPace) } else { unavailable(s); Spacer(minLength: 0) }
+                    if !usable(s) {
+                        unavailable(s); Spacer(minLength: 0)
+                    } else if split.contains(s.provider) {
+                        VStack(alignment: .leading, spacing: 5) { ForEach(pair(s)) { w in row(w, s, showPace) } }
+                    } else {
+                        grid(pair(s), s, showPace)
+                    }
                 }
             }
+        }
+    }
+}
+
+/// A vertical stack that fills the height it's offered: its ideal height is the content plus `minGap`
+/// between items, and any extra height is shared out, a full share between items and half a share
+/// above the first and below the last.
+struct SpreadStack: Layout {
+    var minGap: CGFloat
+    var edgeWeight: CGFloat = 0.5
+
+    private func heights(_ subviews: Subviews, width: CGFloat?) -> [CGFloat] {
+        subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
+    }
+
+    private func contentHeight(_ hs: [CGFloat]) -> CGFloat {
+        hs.reduce(0, +) + minGap * CGFloat(max(0, hs.count - 1))
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let hs = heights(subviews, width: proposal.width)
+        let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        let content = contentHeight(hs)
+        if let h = proposal.height, h.isFinite { return CGSize(width: width, height: max(h, content)) }
+        return CGSize(width: width, height: content)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let hs = heights(subviews, width: bounds.width)
+        let free = max(0, bounds.height - contentHeight(hs))
+        let shares = CGFloat(max(0, hs.count - 1)) + 2 * edgeWeight
+        let unit = shares > 0 ? free / shares : 0
+        var y = bounds.minY + unit * edgeWeight
+        for (sub, h) in zip(subviews, hs) {
+            sub.place(at: CGPoint(x: bounds.minX, y: y), proposal: ProposedViewSize(width: bounds.width, height: h))
+            y += h + minGap + unit
         }
     }
 }

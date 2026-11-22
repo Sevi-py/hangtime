@@ -341,6 +341,13 @@ public struct ActivityHeatmap: View {
         return w / h
     }
 
+    /// How many weeks fill `width` when the cells are as big as `height` allows.
+    public static func weeksThatFit(width: CGFloat, height: CGFloat, spacing: CGFloat, showLabels: Bool = true) -> Int {
+        let cell = (height - (showLabels ? 12 : 0) - spacing * 6) / 7
+        guard cell > 0 else { return 1 }
+        return max(1, Int((width - (showLabels ? 24 : 0) + spacing) / (cell + spacing)))
+    }
+
     private func level(_ value: Double, max: Double) -> Double {
         guard value > 0, max > 0 else { return 0 }
         // 4 buckets like GitHub, scaled with sqrt so light days still show.

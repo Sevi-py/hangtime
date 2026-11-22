@@ -450,9 +450,13 @@ struct HistorySection: View {
                         .frame(height: 130)
                 }
                 if s.popoverShowsHeatmap {
-                    ActivityHeatmap(totals: model.history.dailyTotals(metric: metric, providers: providers),
-                                    weeks: 19, spacing: 2.5, metric: metric)
-                        .frame(height: 100)
+                    // As many weeks as fit the panel's width, so the grid uses all of it.
+                    GeometryReader { geo in
+                        ActivityHeatmap(totals: model.history.dailyTotals(metric: metric, providers: providers),
+                                        weeks: ActivityHeatmap.weeksThatFit(width: geo.size.width, height: 100, spacing: 2.5),
+                                        spacing: 2.5, metric: metric)
+                    }
+                    .frame(height: 100)
                 }
             }
         }
