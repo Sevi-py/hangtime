@@ -112,6 +112,8 @@ struct SetupView: View {
             }
         }
         .frame(width: Self.size.width, height: Self.size.height)
+        // Loading another app's icon is slow; do it in the background long before the T3 Code page.
+        .onAppear { T3Icon.shared.load() }
     }
 
     @ViewBuilder
@@ -706,20 +708,18 @@ private struct T3Page: View {
                         Text("No problem. Headroom reads your history from the tools' local session logs instead. You can connect T3 Code later in Settings › History.")
                             .font(.callout).foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                            .frame(width: 440)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .frame(maxWidth: 460)
                 case .granted:
-                    VStack(spacing: 6) {
-                        Label("Connected", systemImage: "checkmark.circle.fill")
-                            .font(.headline).foregroundStyle(.green)
-                        Text("Headroom shows up as “Headroom” under Sharing & access in T3 Code. Access renews on its own.")
-                            .font(.callout).foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: 460)
-                    .transition(.scale(scale: 0.9).combined(with: .opacity))
+                    Text("Headroom shows up as “Headroom” under Sharing & access in T3 Code. Access renews on its own.")
+                        .font(.callout).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(nil)
+                        .frame(width: 440)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
                 default:
                     VStack(spacing: 14) {
                         VStack(alignment: .leading, spacing: 8) {
@@ -774,12 +774,6 @@ private struct ConnectionGraphic: View {
     var available: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let t3Icon: NSImage? = {
-        let fm = FileManager.default
-        guard let app = (try? fm.contentsOfDirectory(atPath: "/Applications"))?
-            .first(where: { $0.hasPrefix("T3 Code") && $0.hasSuffix(".app") }) else { return nil }
-        return NSWorkspace.shared.icon(forFile: "/Applications/\(app)")
-    }()
 
     var body: some View {
         HStack(spacing: 14) {
@@ -804,7 +798,7 @@ private struct ConnectionGraphic: View {
             }
             .frame(width: 130, height: 30)
             Group {
-                if let icon = Self.t3Icon {
+                if let icon = T3Icon.shared.image {
                     Image(nsImage: icon).resizable()
                 } else {
                     RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.quaternary)
@@ -816,6 +810,53 @@ private struct ConnectionGraphic: View {
             .opacity(available ? 1 : 0.45)
         }
         .animation(.spring(duration: 0.5, bounce: 0.3), value: connected)
+    }
+}
+
+/// T3 Code's app icon, from whichever build the user has: the running one, else the regular
+/// "T3 Code.app", else another build such as Nightly. Loaded off the main thread.
+@MainActor
+@Observable
+final class T3Icon {
+    static let shared = T3Icon()
+    private(set) var image: NSImage?
+    private var started = false
+
+    func load() {
+        guard !started else { return }
+        started = true
+        Task.detached(priority: .userInitiated) {
+            let rendered = Self.find()
+            await MainActor.run { self.image = rendered }
+        }
+    }
+
+    nonisolated private static func find() -> NSImage? {
+        guard let url = appURL() else { return nil }
+        // Rasterize once at the size we draw, instead of handing SwiftUI the full multi-size .icns.
+        let icon = NSWorkspace.shared.icon(forFile: url.path)
+        let px = 128
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px, bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return icon }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        icon.draw(in: NSRect(x: 0, y: 0, width: px, height: px))
+        NSGraphicsContext.restoreGraphicsState()
+        let out = NSImage(size: NSSize(width: 64, height: 64))
+        out.addRepresentation(rep)
+        return out
+    }
+
+    nonisolated private static func appURL() -> URL? {
+        let isT3: (URL) -> Bool = { $0.lastPathComponent.hasPrefix("T3 Code") && $0.pathExtension == "app" }
+        if let running = NSWorkspace.shared.runningApplications.compactMap(\.bundleURL).first(where: isT3) {
+            return running
+        }
+        let fm = FileManager.default
+        let dirs = [URL(fileURLWithPath: "/Applications"), fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications")]
+        let found = dirs.flatMap { (try? fm.contentsOfDirectory(at: $0, includingPropertiesForKeys: nil)) ?? [] }.filter(isT3)
+        return found.first { $0.lastPathComponent == "T3 Code.app" } ?? found.sorted { $0.path < $1.path }.first
     }
 }
 
