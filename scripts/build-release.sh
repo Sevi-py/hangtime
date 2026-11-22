@@ -24,7 +24,17 @@ BUILD=${BUILD_NUMBER:-$(date +%Y%m%d%H%M%S)}
 DIST=dist/$VERSION
 DERIVED=${DERIVED_DATA:-build/release}
 WORK=$(mktemp -d)
-trap 'rm -rf "$WORK"' EXIT
+# On exit, unregister and delete every app copy this build made (the export in $WORK and the copy the archive
+# leaves in DerivedData), so Spotlight and Launch Services only know /Applications/Hangtime.app.
+cleanup() {
+  local ls=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+  for app in "$WORK"/**/Hangtime.app(N/) "$DERIVED"/Build/Intermediates.noindex/ArchiveIntermediates/**/Hangtime.app(N/); do
+    "$ls" -u "$app" >/dev/null 2>&1 || true
+    rm -rf "$app"
+  done
+  rm -rf "$WORK"
+}
+trap cleanup EXIT
 rm -rf "$DIST"; mkdir -p "$DIST"
 
 step() { print -P "%F{cyan}==> $1%f" }

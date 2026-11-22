@@ -29,7 +29,8 @@ killall chronod 2>/dev/null || true
 # Remove the app bundles left in build/ (Release and any Debug ones), so Spotlight, Launchpad and
 # LaunchServices only ever know the copy in /Applications. Intermediates stay for incremental builds.
 LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
-for stale in build/Build/Products/*/Hangtime.app(N) build/*/Build/Products/*/Hangtime.app(N); do
+for stale in build/Build/Products/*/Hangtime.app(N) build/*/Build/Products/*/Hangtime.app(N) \
+             build/**/ArchiveIntermediates/**/Hangtime.app(N/); do
   "$LSREGISTER" -u "$stale" >/dev/null 2>&1 || true
   rm -rf "$stale"
 done
