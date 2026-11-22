@@ -218,6 +218,20 @@ public struct ProviderSnapshot: Codable, Hashable, Identifiable, Sendable {
         return p
     }
 
+    /// `w` as far as you can actually use it right now: when the session or weekly limit is used up,
+    /// nothing is usable, so it shows 0% left and resets when the blocking limit does.
+    public func blocked(_ w: UsageWindow) -> UsageWindow {
+        let blockers = [session, weekly].compactMap { $0 }
+            .filter { $0.isExhausted && $0.isStale != true && $0.id != w.id }
+        guard !w.isExhausted, !blockers.isEmpty else { return w }
+        var out = w
+        out.usedFraction = 1
+        let until = blockers.max { ($0.resetsAt ?? .distantFuture) < ($1.resetsAt ?? .distantFuture) }!
+        out.resetsAt = until.resetsAt
+        out.duration = until.duration
+        return out
+    }
+
     /// The window that is most constraining right now (least remaining).
     public var tightest: UsageWindow? { windows.min { $0.remainingFraction < $1.remainingFraction } }
 

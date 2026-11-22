@@ -64,6 +64,13 @@ enum LimitOption: String, AppEnum {
         case .tightest: snap.tightest
         }
     }
+
+    /// For widgets showing just this one limit of one provider: honours "0% when a limit is used up".
+    func pickSingle(_ snap: ProviderSnapshot) -> UsageWindow? {
+        guard let w = pick(snap) else { return nil }
+        let zero = SharedStore.defaults.object(forKey: SharedStore.Key.zeroWhenBlocked) as? Bool ?? true
+        return zero ? snap.blocked(w) : w
+    }
 }
 
 enum MetricOption: String, AppEnum {

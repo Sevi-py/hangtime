@@ -42,5 +42,6 @@ public enum SharedStore {
         public static let colorByProvider = "colorByProvider"
         public static let historyMetric = "historyMetric"
         public static let heatmapPalette = "heatmapPalette"
+        public static let zeroWhenBlocked = "zeroWhenBlocked"
     }
 }

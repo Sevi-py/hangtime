@@ -62,6 +62,9 @@ final class AppSettings {
     var menuBarStyle: MenuBarStyle { didSet { save() } }
     var menuBarWindow: MenuBarWindowChoice { didSet { save() } }
     var menuBarShowsResetTime: Bool { didSet { save() } }
+    /// Show 0% left when the session or weekly limit is used up, whichever of the two is displayed
+    /// (menu bar and single-limit widgets only).
+    var zeroWhenBlocked: Bool { didSet { save() } }
 
     var showPaceMarker: Bool { didSet { save() } }
     var colorByProvider: Bool { didSet { save() } }
@@ -99,6 +102,7 @@ final class AppSettings {
         menuBarStyle = MenuBarStyle(rawValue: d.string(forKey: "menuBarStyle") ?? "") ?? .perProvider
         menuBarWindow = MenuBarWindowChoice(rawValue: d.string(forKey: "menuBarWindow") ?? "") ?? .session
         menuBarShowsResetTime = d.object(forKey: "menuBarShowsResetTime") as? Bool ?? false
+        zeroWhenBlocked = d.object(forKey: SharedStore.Key.zeroWhenBlocked) as? Bool ?? true
 
         showPaceMarker = d.object(forKey: "showPaceMarker") as? Bool ?? true
         colorByProvider = d.object(forKey: "colorByProvider") as? Bool ?? true
@@ -130,6 +134,7 @@ final class AppSettings {
         d.set(menuBarStyle.rawValue, forKey: "menuBarStyle")
         d.set(menuBarWindow.rawValue, forKey: "menuBarWindow")
         d.set(menuBarShowsResetTime, forKey: "menuBarShowsResetTime")
+        d.set(zeroWhenBlocked, forKey: SharedStore.Key.zeroWhenBlocked)
         d.set(showPaceMarker, forKey: "showPaceMarker")
         d.set(colorByProvider, forKey: "colorByProvider")
         d.set(showModelLimits, forKey: "showModelLimits")
@@ -149,6 +154,7 @@ final class AppSettings {
 
         let g = SharedStore.defaults
         g.set(showPaceMarker, forKey: SharedStore.Key.showPaceMarker)
+        g.set(zeroWhenBlocked, forKey: SharedStore.Key.zeroWhenBlocked)
         g.set(colorByProvider, forKey: SharedStore.Key.colorByProvider)
         g.set(historyMetric.rawValue, forKey: SharedStore.Key.historyMetric)
     }

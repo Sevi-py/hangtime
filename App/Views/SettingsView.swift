@@ -251,6 +251,9 @@ private struct AppearanceSettings: View {
                 }
                 .disabled(s.menuBarStyle == .iconOnly)
                 Toggle("Show time until reset when a limit is used up", isOn: $s.menuBarShowsResetTime)
+                Toggle("Show 0% when the session or weekly limit is used up", isOn: $s.zeroWhenBlocked)
+                Text("Either one being used up blocks you, whichever limit is shown. Also applies to the Single Limit widget and the Control Center control.")
+                    .font(.caption).foregroundStyle(.secondary)
                 LabeledContent("Preview") {
                     MenuBarLabel()
                         .padding(.horizontal, 8).padding(.vertical, 3)
@@ -278,6 +281,7 @@ private struct AppearanceSettings: View {
         .frame(height: 600)
         .onChange(of: s.showPaceMarker) { model.publish() }
         .onChange(of: s.colorByProvider) { model.publish() }
+        .onChange(of: s.zeroWhenBlocked) { model.publish() }
     }
 }
 

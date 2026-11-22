@@ -182,7 +182,7 @@ struct SingleGaugeView: View {
     var body: some View {
         let pid = config.provider.resolve(in: entry.state) ?? .claude
         let snap = entry.state.snapshot(for: pid)
-        if let snap, usable(snap), let w = config.limit.pick(snap) {
+        if let snap, usable(snap), let w = config.limit.pickSingle(snap) {
             VStack(spacing: 6) {
                 HStack(spacing: 5) {
                     ProviderGlyph(pid, size: 14)

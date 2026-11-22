@@ -12,7 +12,10 @@ struct MenuBarLabel: View {
             .filter { s.inMenuBar[$0] ?? true }
             .map { p in
                 let snap = model.snapshots[p]
-                return (p, snap.flatMap { s.menuBarWindow.pick(from: $0) }, snap?.status.isProblem ?? false)
+                let w = snap.flatMap { snap in
+                    s.menuBarWindow.pick(from: snap).map { s.zeroWhenBlocked ? snap.blocked($0) : $0 }
+                }
+                return (p, w, snap?.status.isProblem ?? false)
             }
         Image(nsImage: Self.render(items: items, style: s.menuBarStyle, showReset: s.menuBarShowsResetTime))
             .accessibilityLabel(accessibility(items))

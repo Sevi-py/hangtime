@@ -6,7 +6,7 @@ import AppIntents
 struct UsageControlConfiguration: ControlConfigurationIntent {
     static let title: LocalizedStringResource = "Usage Limit"
     @Parameter(title: "Provider", default: .automatic) var provider: ProviderOption
-    @Parameter(title: "Limit", default: .tightest) var limit: LimitOption
+    @Parameter(title: "Limit", default: .session) var limit: LimitOption
 }
 
 struct UsageControlValue {
@@ -29,7 +29,7 @@ struct UsageControlProvider: AppIntentControlValueProvider {
         if snap.status == .loggedOut {
             return UsageControlValue(provider: pid, text: "Signed out", symbol: "person.crop.circle.badge.exclamationmark")
         }
-        guard let w = configuration.limit.pick(snap) else {
+        guard let w = configuration.limit.pickSingle(snap) else {
             return UsageControlValue(provider: pid, text: "—", symbol: "gauge.with.dots.needle.0percent")
         }
         let r = w.remainingFraction
