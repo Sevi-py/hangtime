@@ -28,10 +28,7 @@ public enum Theme {
     }
 
     public static func color(for window: UsageWindow, provider: ProviderID, byProvider: Bool) -> Color {
-        let r = window.remainingFraction
-        if r < 0.10 { return .red }
-        if byProvider { return r < 0.25 ? .orange : provider.tint }
-        return statusColor(remaining: r)
+        byProvider ? provider.tint : statusColor(remaining: window.remainingFraction)
     }
 }
 
