@@ -97,7 +97,9 @@ struct ProviderLimitsView: View {
             if !usable(snap) {
                 StatusPlaceholder(snapshot: snap)
             } else if config.style == .rings {
-                let shown = Array(windows.prefix(family == .systemSmall ? 2 : family == .systemMedium ? 4 : 6))
+                let shown = family == .systemSmall
+                    ? (config.showModelLimits ? (snap?.mainPair ?? []) : Array(windows.prefix(2)))
+                    : Array(windows.prefix(family == .systemMedium ? 4 : 6))
                 Spacer(minLength: 0)
                 HStack(spacing: family == .systemSmall ? 8 : 14) {
                     ForEach(shown) { w in
@@ -274,12 +276,7 @@ struct OverviewView: View {
         }
     }
 
-    /// Session + weekly, or the first two limits for CLIs that have neither (e.g. per-model quotas).
-    private func pair(_ s: ProviderSnapshot) -> [UsageWindow] {
-        var p = [s.session, s.weekly].compactMap { $0 }
-        for w in s.sortedWindows where p.count < 2 && !p.contains(where: { $0.id == w.id }) { p.append(w) }
-        return p
-    }
+    private func pair(_ s: ProviderSnapshot) -> [UsageWindow] { s.mainPair }
 
     private func row(_ w: UsageWindow, _ s: ProviderSnapshot, _ showPace: Bool) -> some View {
         WindowRow(window: w, provider: s.provider, showPace: showPace,

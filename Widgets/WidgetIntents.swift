@@ -59,8 +59,8 @@ enum LimitOption: String, AppEnum {
 
     func pick(_ snap: ProviderSnapshot) -> UsageWindow? {
         switch self {
-        case .session: snap.session ?? snap.tightest
-        case .weekly: snap.weekly ?? snap.tightest
+        case .session: snap.session ?? snap.weekly ?? snap.tightest
+        case .weekly: snap.weekly ?? snap.session ?? snap.tightest
         case .tightest: snap.tightest
         }
     }
@@ -107,7 +107,7 @@ struct SingleGaugeIntent: WidgetConfigurationIntent {
     static let description = IntentDescription("One big gauge for one limit.")
 
     @Parameter(title: "Provider", default: .automatic) var provider: ProviderOption
-    @Parameter(title: "Limit", default: .tightest) var limit: LimitOption
+    @Parameter(title: "Limit", default: .session) var limit: LimitOption
     @Parameter(title: "Show even-pace marker", default: false) var showPace: Bool
 }
 

@@ -28,8 +28,8 @@ enum MenuBarWindowChoice: String, CaseIterable, Identifiable, Codable {
     func pick(from snap: ProviderSnapshot) -> UsageWindow? {
         switch self {
         case .tightest: snap.tightest
-        case .session: snap.session ?? snap.tightest
-        case .weekly: snap.weekly ?? snap.tightest
+        case .session: snap.session ?? snap.weekly ?? snap.tightest
+        case .weekly: snap.weekly ?? snap.session ?? snap.tightest
         }
     }
 }

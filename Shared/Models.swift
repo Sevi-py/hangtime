@@ -210,6 +210,14 @@ public struct ProviderSnapshot: Codable, Hashable, Identifiable, Sendable {
     public var session: UsageWindow? { windows.first { $0.kind == .session } }
     public var weekly: UsageWindow? { windows.first { $0.kind == .weekly } }
 
+    /// The two limits to show when there's room for two: session and weekly, topped up with
+    /// whatever else the provider has (e.g. a model limit) when one of them doesn't exist.
+    public var mainPair: [UsageWindow] {
+        var p = [session, weekly].compactMap { $0 }
+        for w in sortedWindows where p.count < 2 && !p.contains(where: { $0.id == w.id }) { p.append(w) }
+        return p
+    }
+
     /// The window that is most constraining right now (least remaining).
     public var tightest: UsageWindow? { windows.min { $0.remainingFraction < $1.remainingFraction } }
 
