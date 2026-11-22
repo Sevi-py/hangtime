@@ -23,6 +23,7 @@ targets:
       - path: Widgets/UsageWidgets.swift
       - path: Widgets/WidgetIntents.swift
       - path: Resources/Assets.xcassets
+      - path: Resources/AppIcon.icon
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.headroom.mac
