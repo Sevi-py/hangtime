@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore: ["**.md", "Casks/**", "scripts/install.sh"]
+    paths-ignore: ["**.md", "docs/**", "scripts/install.sh"]
   pull_request:
-    paths-ignore: ["**.md", "Casks/**", "scripts/install.sh"]
+    paths-ignore: ["**.md", "docs/**", "scripts/install.sh"]
   workflow_dispatch:
 
 concurrency:

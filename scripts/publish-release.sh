@@ -1,10 +1,12 @@
 #!/bin/zsh
 # Publishes dist/<version>/ (from build-release.sh): tags v<version> at HEAD, creates the GitHub release with the
-# zip, DMG and checksums, then points Casks/hangtime.rb at it and pushes that to main.
+# zip, DMG and checksums, then points the Homebrew cask in the tap (github.com/Sevi-py/homebrew-tap) at it.
 #
 #   scripts/publish-release.sh 1.2.0
 #
-# Needs gh (or GH_TOKEN) with write access. Used by .github/workflows/release.yml and scripts/release.sh --local.
+# Needs gh (or GH_TOKEN) with write access to this repo. The tap is pushed over SSH with TAP_DEPLOY_KEY_PATH (a
+# write deploy key, as in CI), or otherwise over HTTPS with your git credentials.
+# Used by .github/workflows/release.yml and scripts/release.sh --local.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -28,19 +30,24 @@ git push -q origin "v$VERSION"
 gh release create "v$VERSION" "$ZIP" "$DMG" "$DIST/SHA256SUMS" --repo "$REPO" --title "Hangtime $VERSION" \
   --verify-tag --generate-notes ${PREV:+--notes-start-tag "$PREV"}
 
-# Point the cask at the new release, on main (CI checks out a detached commit, so switch to main first).
-git fetch -q origin main
-[[ "$(git branch --show-current)" == main ]] || git checkout -q -B main origin/main
-git pull -q --rebase origin main
-sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/hangtime.rb
-git add Casks/hangtime.rb
-if ! git diff --cached --quiet; then
-  git commit -q -m "Cask: Hangtime $VERSION"
-  # Retry if someone pushed to main in the meantime.
+# Point the cask in the tap at the new release.
+TAP=$(mktemp -d)
+trap 'rm -rf "$TAP"' EXIT
+if [[ -n "${TAP_DEPLOY_KEY_PATH:-}" ]]; then
+  export GIT_SSH_COMMAND="ssh -i $TAP_DEPLOY_KEY_PATH -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+  TAP_URL=git@github.com:Sevi-py/homebrew-tap.git
+else
+  TAP_URL=https://github.com/Sevi-py/homebrew-tap.git
+fi
+git clone -q --depth 1 "$TAP_URL" "$TAP"
+sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" "$TAP/Casks/hangtime.rb"
+if ! git -C "$TAP" diff --quiet; then
+  git -C "$TAP" commit -q -am "Hangtime $VERSION"
+  # Retry if someone pushed to the tap in the meantime.
   for attempt in 1 2 3; do
-    git push -q origin main && break
+    git -C "$TAP" push -q origin HEAD:main && break
     sleep 3
-    git pull -q --rebase origin main
+    git -C "$TAP" pull -q --rebase origin main
   done
 fi
 echo "Released https://github.com/$REPO/releases/tag/v$VERSION"

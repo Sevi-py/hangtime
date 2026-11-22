@@ -35,7 +35,8 @@ Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/
   `Hangtime.xcodeproj` is generated from it.
 - Debug builds have two diagnostic modes:
   - `Hangtime --dump [--history]` prints everything the app fetched as JSON.
-  - `Hangtime --render <dir>` renders the panel, settings, Dashboard and widgets to PNGs in light and dark mode.
+  - `Hangtime --render <dir>` renders the panel, settings, Dashboard and widgets to PNGs (@2x) in light and dark
+    mode. Options: `--providers claude,codex`, `--limits-provider <id>`, `--gauge-provider <id>`, `-AppleLocale en_US`.
 - Don't click around the user's real menu bar to test. Use `--render` or `--dump` instead.
 - Never redeem a banked reset while testing.
 - Never refresh the CLIs' OAuth tokens yourself. Let the CLI do it; otherwise it gets signed out.
@@ -47,6 +48,8 @@ Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/
 - Only release when the user asks. `./scripts/release.sh <x.y.z>` bumps `MARKETING_VERSION` on main, and that push
   makes GitHub Actions build, notarize and publish. Don't bump `MARKETING_VERSION` for any other reason.
 - `./scripts/build-release.sh <x.y.z>` is a dry run (signed, notarized artifacts in `dist/`), safe for testing.
+- The Homebrew cask lives in https://github.com/Sevi-py/homebrew-tap (`Casks/hangtime.rb`). The release workflow
+  updates it with the `TAP_DEPLOY_KEY` deploy key; see `docs/RELEASING.md`.
 - Signing team is `8XX544GLPH` (Flarely e.U.). The app group is team-prefixed, so changing the team changes where
   widget-shared settings live.
 - The in-app updater (`App/Support/Updater.swift`) only accepts updates signed by that team and notarized.

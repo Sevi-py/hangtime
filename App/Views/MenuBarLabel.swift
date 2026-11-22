@@ -27,10 +27,10 @@ struct MenuBarLabel: View {
     }
 
     @MainActor
-    static func render(items: [(ProviderID, UsageWindow?, Bool)], style: MenuBarStyle, showReset: Bool) -> NSImage {
+    static func render(items: [(ProviderID, UsageWindow?, Bool)], style: MenuBarStyle, showReset: Bool, scale: CGFloat? = nil) -> NSImage {
         let content = LabelContent(items: items, style: style, showReset: showReset)
         let renderer = ImageRenderer(content: content)
-        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
+        renderer.scale = scale ?? NSScreen.main?.backingScaleFactor ?? 2
         let image = renderer.nsImage ?? NSImage(systemSymbolName: "gauge.with.dots.needle.33percent", accessibilityDescription: nil)!
         image.isTemplate = true
         return image

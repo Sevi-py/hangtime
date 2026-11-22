@@ -44,8 +44,17 @@ final class AppModel {
 
     /// Enabled + installed providers, in the user's order.
     var visibleProviders: [ProviderID] {
-        settings.order.filter { (settings.enabled[$0] ?? true) && (install[$0]?.isInstalled ?? false) }
+        let visible = settings.order.filter { (settings.enabled[$0] ?? true) && (install[$0]?.isInstalled ?? false) }
+        #if DEBUG
+        if let only = debugProviders { return visible.filter(only.contains) }
+        #endif
+        return visible
     }
+
+    #if DEBUG
+    /// `--render <dir> --providers claude,codex`: limits the rendered panel and menu bar label to these providers.
+    var debugProviders: [ProviderID]?
+    #endif
 
     var visibleSnapshots: [ProviderSnapshot] { visibleProviders.compactMap { snapshots[$0] } }
 

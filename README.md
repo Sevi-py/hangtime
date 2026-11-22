@@ -1,8 +1,29 @@
-# Hangtime
+<p align="center">
+  <img src="docs/images/icon.png" width="128" height="128" alt="Hangtime icon">
+</p>
 
-A native macOS menu bar app that shows how much of your AI coding subscriptions you have **left**, for
-**Claude Code**, **OpenAI Codex**, **xAI Grok CLI** and **Google Antigravity CLI** (`agy`). It also has desktop widgets, Control Center controls,
-banked-reset management and usage history charts.
+<h1 align="center">Hangtime</h1>
+
+<p align="center">
+  See how much of your AI coding subscriptions you have <b>left</b>, right in your Mac's menu bar and widgets.<br>
+  For <b>Claude Code</b>, <b>OpenAI Codex</b>, <b>Grok CLI</b> and <b>Google Antigravity</b>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Sevi-py/hangtime/releases/latest"><img src="https://img.shields.io/github/v/release/Sevi-py/hangtime?label=release&color=blue" alt="Latest release"></a>
+  <a href="https://github.com/Sevi-py/hangtime/releases"><img src="https://img.shields.io/github/downloads/Sevi-py/hangtime/total?color=blue" alt="Downloads"></a>
+  <img src="https://img.shields.io/badge/macOS-26%20Tahoe%2B-black?logo=apple" alt="macOS 26 Tahoe or later">
+  <a href="https://github.com/Sevi-py/homebrew-tap"><img src="https://img.shields.io/badge/homebrew-sevi--py%2Ftap-FBB040?logo=homebrew&logoColor=white" alt="Homebrew tap"></a>
+  <a href="https://github.com/Sevi-py/hangtime/actions/workflows/ci.yml"><img src="https://github.com/Sevi-py/hangtime/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Sevi-py/hangtime?color=lightgrey" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
+    <img src="docs/images/hero-light.png" width="820" alt="The Hangtime panel open from the menu bar, with Hangtime widgets on the desktop behind it">
+  </picture>
+</p>
 
 ## Install
 
@@ -11,129 +32,94 @@ Requires macOS 26 (Tahoe) or later.
 **Homebrew**
 
 ```sh
-brew tap sevi-py/hangtime https://github.com/Sevi-py/hangtime
-brew install --cask sevi-py/hangtime/hangtime
+brew tap sevi-py/tap
+brew trust --cask sevi-py/tap/hangtime   # Homebrew only loads casks from third-party taps you trust
+brew install --cask sevi-py/tap/hangtime
 ```
 
-**Direct download**: get `Hangtime-<version>.dmg` (or `.zip`) from
-[Releases](https://github.com/Sevi-py/hangtime/releases/latest) and move Hangtime to Applications.
-Builds are signed with Developer ID and notarized by Apple.
+**Download**: grab `Hangtime-<version>.dmg` from the [latest release](https://github.com/Sevi-py/hangtime/releases/latest),
+open it and drag Hangtime to Applications. Builds are signed with Developer ID and notarized by Apple.
 
-**Updates**: Hangtime checks GitHub Releases every few hours. It installs updates the same way it was installed:
-`brew upgrade` for Homebrew installs, otherwise it downloads the release, verifies its signature and notarization,
-and replaces itself. Settings, the setup state and placed widgets are kept. Turn off automatic checks or installs
+Hangtime keeps itself up to date (through `brew upgrade` if you installed it with Homebrew). You can turn that off
 in Settings → General → Updates.
 
 ## Features
 
-- **Menu bar status item**: what's left, per provider or just the most constrained limit, shown as text or mini
-  rings. Click it for a panel (no window) with every limit, banked resets, sign-in and history, plus menu-style
-  options: Refresh, Dashboard, Open at Login (on by default), Settings, About and Quit.
-- **Dashboard window**: large chart, a year-long heatmap (color selectable) and a per-model cost/token breakdown.
-- **Every limit the CLI reports**:
-  - Claude: session (5h), weekly, and per-model weekly limits such as **Fable**.
-  - Codex: session/weekly windows plus any per-model buckets.
-  - Grok: the plan's credit window.
-  - Antigravity: the weekly Gemini quota, plus the shared Claude & GPT model quota.
-  - Limits are discovered dynamically, so plans without a session window (or with new limits) just work.
-- **Even-pace marker**: a tick on every bar or ring shows how much would be left if you spread your usage evenly
-  over the window. Halfway through the week, the tick sits in the middle.
-- **Banked resets**: lists available resets with their expiry and lets you redeem them (with confirmation).
-  - Claude: `cedar_ember` grants (what `/limit-reset` uses) and the weekly "reset 5-hour limit" allowance.
-  - Codex: reset credits via `codex app-server`.
-  - Grok and Antigravity have no banked resets.
-- **Notifications**:
-  - When a used-up limit resets, either per limit from the panel or always.
-  - When a limit drops below a threshold.
-  - A day before a banked reset expires.
-  - When a CLI gets signed out.
-- **Sign in without a terminal**: if a CLI is logged out, the panel shows a warning and a **Sign In…** button that
-  runs the CLI's own login flow in your browser.
-- **CLI detection**: only installed CLIs are shown. Each CLI is found through your login shell's `PATH` plus the
-  usual install locations. The command is customizable per provider (path, alias or wrapper like
-  `npx -y @openai/codex`).
-- **History**:
-  - Daily cost and token charts, and a GitHub-style activity heatmap.
-  - Uses **T3 Code**'s usage service when T3 Code is installed and running (all providers, priced with LiteLLM
-    rates). Access is a read-only T3 session that you can connect, renew or revoke in Settings → History.
-  - Otherwise parses the CLIs' own session logs incrementally (`~/.claude/projects`, `~/.codex/sessions`,
-    `~/.grok/sessions`).
-- **Widgets** (all configurable via *Edit Widget*): Provider Limits (rings or bars, S/M/L), All Providers (S/M/L),
-  Single Limit gauge (S), Usage Chart (S–XL), Activity heatmap (S–XL).
-- **Control Center / menu bar control**: shows a provider's remaining limit; tapping it refreshes.
+- **Menu bar**: what's left per provider, or only your tightest limit, as text or mini rings. Click it for a
+  panel with every limit, when it resets, and quick actions.
+- **Every limit the CLIs report**: Claude's session, weekly and per-model limits, Codex's windows, Grok's
+  credits and Antigravity's model quotas. New limit types show up automatically.
+- **Even-pace marker**: a tick on every bar shows where you'd be if you spread your usage evenly over the window,
+  so you can tell at a glance whether you're ahead or behind.
+- **Banked resets**: see your available Claude and Codex resets with their expiry, and redeem them (with
+  confirmation).
+- **Widgets** for the desktop and Notification Center (Provider Limits, All Providers, Single Limit, Usage Chart,
+  Activity heatmap), plus a Control Center control.
+- **Dashboard**: cost and token history, a year-long activity heatmap and a per-model breakdown.
+- **Notifications** when a limit resets, runs low, a banked reset is about to expire, or a CLI gets signed out.
+- **No terminal needed**: if a CLI is signed out, Hangtime offers a *Sign In…* button that runs the CLI's own
+  login in your browser.
 
-## How data is fetched
+<p align="center">
+  <img src="docs/images/widgets-notification-center.png" width="300" alt="Hangtime widgets in Notification Center">
+  &nbsp;
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+    <img src="docs/images/dashboard-light.png" width="500" alt="The Hangtime Dashboard window">
+  </picture>
+</p>
 
-| Provider | Credentials | Limits | Resets |
-| --- | --- | --- | --- |
-| Claude Code | The CLI's own login (Keychain item `Claude Code-credentials`, read via `/usr/bin/security`; falls back to `~/.claude/.credentials.json`) | `GET api.anthropic.com/api/oauth/usage` (same endpoint as `/usage`), generic `limits[]` array | `cedar_ember` grants → `POST /api/organizations/{org}/reset_rate_limits` |
-| Codex | Handled by the CLI | `codex app-server` → `account/rateLimits/read` | `account/rateLimitResetCredit/consume` |
-| Grok | `~/.grok/auth.json` | `GET cli-chat-proxy.grok.com/v1/billing?format=credits` | n/a |
-| Antigravity (`agy`) | The CLI's login (Keychain item `gemini` / `antigravity`, read via `/usr/bin/security`) | `POST daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels` (per-model `quotaInfo`) | n/a |
+## How it works
 
-How it stays robust to CLI updates:
+Hangtime has no server and no analytics. It reads each CLI's existing login and asks the provider for your
+limits the same way the CLI does. It never refreshes tokens itself, so it never signs your CLIs out. Only CLIs
+that are installed show up.
 
-- Hangtime never refreshes OAuth tokens itself. The CLIs rotate refresh tokens, so doing that would sign them out.
-  When a token is stale, Hangtime asks the CLI to do something authenticated, and the CLI refreshes the token
-  itself.
-- Codex is queried through the CLI's own JSON-RPC protocol.
-- All payloads are parsed leniently. Unknown limit types still show up, with a readable title.
-- Claude's usage endpoint is heavily rate limited. Hangtime honors `Retry-After` across launches, polls at most
-  every 2.5 minutes, and otherwise shows the freshest of its own cache and Claude Code's
-  `cachedUsageUtilization`.
+Details for each provider, the history sources and the network access are in
+[docs/how-it-works.md](docs/how-it-works.md).
 
-## Building
+## Building from source
 
-Requirements: Xcode 26+, macOS 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+You need macOS 26, Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+`project.yml` is the source of truth; `Hangtime.xcodeproj` is generated from it.
 
 ```sh
-./scripts/install.sh   # build, replace /Applications/Hangtime.app, reload placed widgets, relaunch
-```
-
-Or manually:
-
-```sh
+git clone https://github.com/Sevi-py/hangtime.git
+cd hangtime
 xcodegen generate
-xcodebuild -project Hangtime.xcodeproj -scheme Hangtime -configuration Release -derivedDataPath build -allowProvisioningUpdates build
-cp -R build/Build/Products/Release/Hangtime.app /Applications/
+open Hangtime.xcodeproj
 ```
 
-To sign with a different team, change `DEVELOPMENT_TEAM` in `project.yml`. The app group is derived from the
-team ID.
-
-Debug builds include diagnostics:
-
-- `Hangtime --dump [--history]` prints everything it fetched as JSON.
-- `Hangtime --render <dir>` renders the panel, settings and widgets to PNGs in light and dark mode.
-
-Provider logos come from [LobeHub Icons](https://github.com/lobehub/lobe-icons) (MIT). The logos are trademarks of
-their owners.
-
-## Releasing
-
-Releases are universal (Apple silicon and Intel), signed with Developer ID and notarized.
+The project is signed with the maintainer's team. To build with yours, set your team ID: change
+`DEVELOPMENT_TEAM` in `project.yml` (then run `xcodegen generate` again), or pass it on the command line:
 
 ```sh
-./scripts/release.sh 1.2.0           # bump the version on main; GitHub Actions builds and publishes
-./scripts/release.sh 1.2.0 --local   # same, but build and publish from this Mac
-./scripts/build-release.sh 1.2.0     # dry run: signed, notarized zip + DMG in dist/1.2.0, nothing published
+xcodebuild -project Hangtime.xcodeproj -scheme Hangtime -configuration Release \
+  -derivedDataPath build -allowProvisioningUpdates DEVELOPMENT_TEAM=<YOUR_TEAM_ID> build
+open build/Build/Products/Release/Hangtime.app
 ```
 
-A release ships only when `MARKETING_VERSION` in `project.yml` changes on `main` to a version without a tag
-(`.github/workflows/release.yml`). It then tags `v1.2.0`, creates the GitHub release with generated notes and
-updates the cask. Every other push only runs CI (`.github/workflows/ci.yml`), which builds a universal binary
-using Xcode's compilation cache.
+The app group that the app shares with its widgets is derived from the team ID, so widgets work with any team.
+If you run your own build, turn off automatic updates in Settings → General → Updates; otherwise Hangtime
+replaces it with the next official release.
 
-GitHub Actions needs these repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8` (an App Store
-Connect team API key with the Admin role, used for cloud signing and notarization).
+`./scripts/install.sh` builds a Release version, replaces `/Applications/Hangtime.app` and reloads widgets you
+have already placed. Run `xcodegen generate` after adding or removing files.
 
-For `--local` and dry runs on a Mac:
+**Debug builds** have two diagnostic modes that don't touch the menu bar:
 
-- Xcode signed in with an account on team `8XX544GLPH` (Flarely e.U.). Xcode uses the cloud-managed
-  Developer ID certificate.
-- Notarization credentials in the Keychain:
-  `xcrun notarytool store-credentials hangtime-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>`
-- `gh` signed in with push access.
+```sh
+Hangtime --dump [--history]   # print everything it fetched as JSON
+Hangtime --render <dir>       # render the panel, settings, Dashboard and widgets to PNGs
+```
 
-The Homebrew cask lives in [`Casks/hangtime.rb`](Casks/hangtime.rb), so this repo doubles as the tap. Releases
-and the tap only work for others once the repo is public.
+`--render` also takes `--providers claude,codex`, `--limits-provider <id>` and `--gauge-provider <id>`, and the
+usual `-AppleLocale en_US` to render another locale. The binary is at
+`Hangtime.app/Contents/MacOS/Hangtime`.
+
+Maintainers: see [docs/RELEASING.md](docs/RELEASING.md) for how releases are built and published.
+
+## License
+
+[MIT](LICENSE). Provider logos come from [LobeHub Icons](https://github.com/lobehub/lobe-icons) (MIT) and are
+trademarks of their owners.
