@@ -97,7 +97,7 @@ final class AppSettings {
 
         refreshMinutes = d.object(forKey: "refreshMinutes") as? Double ?? 0
         menuBarStyle = MenuBarStyle(rawValue: d.string(forKey: "menuBarStyle") ?? "") ?? .perProvider
-        menuBarWindow = MenuBarWindowChoice(rawValue: d.string(forKey: "menuBarWindow") ?? "") ?? .tightest
+        menuBarWindow = MenuBarWindowChoice(rawValue: d.string(forKey: "menuBarWindow") ?? "") ?? .session
         menuBarShowsResetTime = d.object(forKey: "menuBarShowsResetTime") as? Bool ?? false
 
         showPaceMarker = d.object(forKey: "showPaceMarker") as? Bool ?? true

@@ -47,6 +47,7 @@ enum DebugRenderer {
                 ("gauge-small", .init(width: 170, height: 170), AnyView(SingleGaugeView(entry: .init(date: .now, state: state, intent: nil), config: SingleGaugeIntent()))),
                 ("chart-medium", .init(width: 364, height: 170), AnyView(ChartWidgetView(entry: .init(date: .now, state: state, intent: nil), config: ChartIntent(), familyOverride: .systemMedium))),
                 ("heatmap-medium", .init(width: 364, height: 170), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemMedium))),
+                ("heatmap-large-square", .init(width: 344, height: 344), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemLarge))),
                 ("heatmap-large", .init(width: 364, height: 382), AnyView(HeatmapWidgetView(entry: .init(date: .now, state: state, intent: nil), config: HeatmapIntent(), familyOverride: .systemLarge))),
             ]
             for (name, size, view) in widgets {

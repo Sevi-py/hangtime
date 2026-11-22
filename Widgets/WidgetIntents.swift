@@ -25,6 +25,28 @@ enum ProviderOption: String, AppEnum {
     }
 }
 
+/// Provider choice for the history widgets, where "All" combines every provider.
+/// `all` keeps the old "automatic" raw value so widgets that were already placed keep showing everything.
+enum HistoryProviderOption: String, AppEnum {
+    case all = "automatic", claude, codex, grok, antigravity
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Provider"
+    static let caseDisplayRepresentations: [HistoryProviderOption: DisplayRepresentation] = [
+        .all: "All",
+        .claude: "Claude Code",
+        .codex: "Codex",
+        .grok: "Grok",
+        .antigravity: "Antigravity",
+    ]
+
+    var single: ProviderID? { ProviderID(rawValue: rawValue) }
+
+    func providers(in state: SharedState) -> Set<ProviderID> {
+        if let single { return [single] }
+        return Set(state.visibleProviders.isEmpty ? ProviderID.allCases : state.visibleProviders)
+    }
+}
+
 enum LimitOption: String, AppEnum {
     case session, weekly, tightest
 
@@ -102,8 +124,7 @@ struct ChartIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Usage Chart"
     static let description = IntentDescription("Daily cost or tokens across providers.")
 
-    @Parameter(title: "Provider", default: .automatic) var provider: ProviderOption
-    @Parameter(title: "All providers", default: true) var allProviders: Bool
+    @Parameter(title: "Provider", default: .all) var provider: HistoryProviderOption
     @Parameter(title: "Metric", default: .automatic) var metric: MetricOption
     @Parameter(title: "Days", default: 30, inclusiveRange: (7, 90)) var days: Int
     @Parameter(title: "Bars", default: false) var bars: Bool
@@ -113,8 +134,7 @@ struct HeatmapIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Activity"
     static let description = IntentDescription("Your coding activity, GitHub-style.")
 
-    @Parameter(title: "Provider", default: .automatic) var provider: ProviderOption
-    @Parameter(title: "All providers", default: true) var allProviders: Bool
+    @Parameter(title: "Provider", default: .all) var provider: HistoryProviderOption
     @Parameter(title: "Metric", default: .automatic) var metric: MetricOption
     @Parameter(title: "Use provider color", default: false) var providerColor: Bool
 }

@@ -224,7 +224,10 @@ struct OverviewView: View {
     private var family: WidgetFamily { familyOverride ?? envFamily }
 
     var body: some View {
-        let snaps = entry.state.visibleSnapshots
+        // Providers with a single limit (or none) go last, so the two-column rows line up above them.
+        let all = entry.state.visibleSnapshots
+        let snaps = family == .systemSmall ? all
+            : all.filter { usable($0) && $0.windows.count >= 2 } + all.filter { !(usable($0) && $0.windows.count >= 2) }
         let showPace = config.showPace && globalShowPace
         if snaps.isEmpty {
             StatusPlaceholder(snapshot: nil)
@@ -296,7 +299,7 @@ struct OverviewView: View {
             ForEach(Array(stride(from: 0, to: windows.count, by: 2)), id: \.self) { i in
                 HStack(spacing: 10) {
                     row(short(windows[i]), s, showPace)
-                    if i + 1 < windows.count { row(short(windows[i + 1]), s, showPace) } else { Color.clear.frame(maxWidth: .infinity, maxHeight: 1) }
+                    if i + 1 < windows.count { row(short(windows[i + 1]), s, showPace) }
                 }
             }
         }
@@ -310,8 +313,10 @@ struct OverviewView: View {
     /// One block per provider: header line, then its limits.
     private func headered<C: View>(_ snaps: [ProviderSnapshot], spacing: CGFloat,
                                    @ViewBuilder content: @escaping (ProviderSnapshot) -> C) -> some View {
-        VStack(alignment: .leading, spacing: spacing) {
-            ForEach(snaps) { s in
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(snaps.enumerated()), id: \.element.id) { i, s in
+                // Flexible gaps spread the providers over the widget instead of leaving a blank strip below.
+                if i > 0 { Spacer(minLength: spacing).frame(maxHeight: spacing + 8) }
                 VStack(alignment: .leading, spacing: 5) {
                     WidgetHeader(provider: s.provider, snapshot: s, compact: family == .systemMedium)
                     if usable(s) { content(s) } else { unavailable(s) }
@@ -322,8 +327,9 @@ struct OverviewView: View {
 
     /// Densest layout: the provider's icon followed by its two main limits on one line.
     private func compactRows(_ snaps: [ProviderSnapshot], spacing: CGFloat, _ showPace: Bool) -> some View {
-        VStack(alignment: .leading, spacing: spacing) {
-            ForEach(snaps) { s in
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(snaps.enumerated()), id: \.element.id) { i, s in
+                if i > 0 { Spacer(minLength: spacing).frame(maxHeight: spacing + 8) }
                 HStack(spacing: 8) {
                     ProviderGlyph(s.provider, size: 14).frame(width: 16)
                     if usable(s) { grid(pair(s), s, showPace) } else { unavailable(s); Spacer(minLength: 0) }
@@ -358,9 +364,7 @@ struct ChartWidgetView: View {
     var body: some View {
         let h = entry.state.history
         let metric = config.metric.resolve(h)
-        let providers: Set<ProviderID> = config.allProviders
-            ? Set(entry.state.visibleProviders.isEmpty ? ProviderID.allCases : entry.state.visibleProviders)
-            : Set([config.provider.resolve(in: entry.state) ?? .claude])
+        let providers = config.provider.providers(in: entry.state)
         let days = family == .systemSmall ? min(config.days, 14) : config.days
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
@@ -404,17 +408,14 @@ struct HeatmapWidgetView: View {
     var body: some View {
         let h = entry.state.history
         let metric = config.metric.resolve(h)
-        let single = config.provider.resolve(in: entry.state) ?? .claude
-        let providers: Set<ProviderID> = config.allProviders
-            ? Set(entry.state.visibleProviders.isEmpty ? ProviderID.allCases : entry.state.visibleProviders)
-            : [single]
+        let providers = config.provider.providers(in: entry.state)
         let weeks = switch family {
         case .systemSmall: 9
         case .systemMedium: 22
         case .systemLarge: 22
         default: 48
         }
-        let tint: Color = config.providerColor && !config.allProviders ? single.tint : HeatmapPalette.current.color
+        let tint: Color = config.providerColor ? config.provider.single?.tint ?? HeatmapPalette.current.color : HeatmapPalette.current.color
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Activity").font(.system(size: 13, weight: .semibold))
@@ -423,15 +424,17 @@ struct HeatmapWidgetView: View {
                                     since: Calendar.current.date(byAdding: .day, value: -weeks * 7, to: entry.date)!)
                 Text(Fmt.metric(total, metric)).font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
             }
-            ActivityHeatmap(totals: h.dailyTotals(metric: metric, providers: providers), weeks: weeks, tint: tint,
-                            spacing: family == .systemSmall ? 2 : 3, showLabels: family != .systemSmall,
-                            metric: metric, now: entry.date)
-                .aspectRatio(family == .systemLarge ? ActivityHeatmap.aspectRatio(weeks: weeks, spacing: 3, showLabels: true) : nil,
-                             contentMode: .fit)
+            let heatmap = ActivityHeatmap(totals: h.dailyTotals(metric: metric, providers: providers), weeks: weeks, tint: tint,
+                                          spacing: family == .systemSmall ? 2 : 3, showLabels: family != .systemSmall,
+                                          metric: metric, now: entry.date)
             if family == .systemLarge {
-                Divider().padding(.vertical, 2)
+                // Only as tall as the grid needs; the chart (which has its own top gridline) takes the rest.
+                heatmap.aspectRatio(ActivityHeatmap.aspectRatio(weeks: weeks, spacing: 3, showLabels: true), contentMode: .fit)
                 DailyUsageChart(points: h.series(lastDays: 30, metric: metric, providers: providers, now: entry.date),
                                 metric: metric, showAxes: true)
+                    .padding(.top, 4)
+            } else {
+                heatmap
             }
         }
     }
