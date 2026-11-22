@@ -9,7 +9,7 @@ inputs:
 outputs:
   cache-key:
     description: Exact key for saving the compilation cache after the build
-    value: ${{ steps.keys.outputs.key }}
+    value: ${{ steps.keys.outputs.exact }}
   cache-hit:
     description: Whether the exact compilation cache key was restored
     value: ${{ steps.restore.outputs.cache-hit }}
@@ -58,7 +58,7 @@ runs:
       run: |
         PREFIX="xcode-cc-${{ runner.os }}-${{ runner.arch }}-${{ steps.xcode.outputs.version }}-"
         echo "prefix=$PREFIX" >> "$GITHUB_OUTPUT"
-        echo "key=$PREFIX${{ hashFiles('App/**', 'Shared/**', 'Widgets/**', 'Resources/**', 'Config/**', 'project.yml') }}" >> "$GITHUB_OUTPUT"
+        echo "exact=$PREFIX${{ hashFiles('App/**', 'Shared/**', 'Widgets/**', 'Resources/**', 'Config/**', 'project.yml') }}" >> "$GITHUB_OUTPUT"
 
     - name: Restore compilation cache
       id: restore
@@ -67,5 +67,5 @@ runs:
         path: |
           build/ci/CompilationCache.noindex
           build/ci/SDKExplicitPrecompiledModules
-        key: ${{ steps.keys.outputs.key }}
+        key: ${{ steps.keys.outputs.exact }}
         restore-keys: ${{ steps.keys.outputs.prefix }}
