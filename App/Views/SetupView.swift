@@ -343,7 +343,7 @@ private struct WelcomePage: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            Image(nsImage: NSApp.applicationIconImage)
+            Image(nsImage: AppIconImage.large)
                 .resizable()
                 .frame(width: 136, height: 136)
                 .shadow(color: .black.opacity(0.18), radius: 18, y: 10)
@@ -777,8 +777,9 @@ private struct ConnectionGraphic: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 64, height: 64)
-            TimelineView(.animation(paused: reduceMotion || connected || !available)) { ctx in
+            Image(nsImage: AppIconImage.small).resizable().frame(width: 64, height: 64)
+            // Low frame rate and its own layer: only the dots get redrawn, not the icons next to them.
+            TimelineView(.animation(minimumInterval: 1 / 24, paused: reduceMotion || connected || !available)) { ctx in
                 let phase = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate * (busy ? 40 : 14)
                 ZStack {
                     Path { p in
@@ -797,6 +798,7 @@ private struct ConnectionGraphic: View {
                 }
             }
             .frame(width: 130, height: 30)
+            .drawingGroup()
             Group {
                 if let icon = T3Icon.shared.image {
                     Image(nsImage: icon).resizable()
@@ -810,6 +812,31 @@ private struct ConnectionGraphic: View {
             .opacity(available ? 1 : 0.45)
         }
         .animation(.spring(duration: 0.5, bounce: 0.3), value: connected)
+    }
+}
+
+/// Headroom's own icon, rendered once at the sizes setup shows it. The full icon has many layers and is
+/// expensive to draw, which made pages that redraw around it (the T3 Code page) stutter.
+@MainActor
+enum AppIconImage {
+    static let large = NSApp.applicationIconImage.rasterized(points: 136)
+    static let small = NSApp.applicationIconImage.rasterized(points: 64)
+}
+
+extension NSImage {
+    /// A single bitmap of this image at `points` × `points` (2× for Retina).
+    nonisolated func rasterized(points: CGFloat) -> NSImage {
+        let px = Int(points * 2)
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px, bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return self }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        draw(in: NSRect(x: 0, y: 0, width: px, height: px))
+        NSGraphicsContext.restoreGraphicsState()
+        let out = NSImage(size: NSSize(width: points, height: points))
+        out.addRepresentation(rep)
+        return out
     }
 }
 
@@ -833,19 +860,7 @@ final class T3Icon {
 
     nonisolated private static func find() -> NSImage? {
         guard let url = appURL() else { return nil }
-        // Rasterize once at the size we draw, instead of handing SwiftUI the full multi-size .icns.
-        let icon = NSWorkspace.shared.icon(forFile: url.path)
-        let px = 128
-        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px, bitsPerSample: 8,
-                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return icon }
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-        icon.draw(in: NSRect(x: 0, y: 0, width: px, height: px))
-        NSGraphicsContext.restoreGraphicsState()
-        let out = NSImage(size: NSSize(width: 64, height: 64))
-        out.addRepresentation(rep)
-        return out
+        return NSWorkspace.shared.icon(forFile: url.path).rasterized(points: 64)
     }
 
     nonisolated private static func appURL() -> URL? {
