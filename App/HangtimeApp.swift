@@ -8,9 +8,7 @@ struct HangtimeApp: App {
     @State private var launch = LaunchState.shared
 
     var body: some Scene {
-        // Read-only on purpose: with the .window style, SwiftUI writes `false` back into this binding when the
-        // panel closes, which removed the item from the menu bar after the panel was opened once.
-        MenuBarExtra(isInserted: Binding(get: { launch.menuBarVisible }, set: { _ in })) {
+        MenuBarExtra(isInserted: $launch.menuBarVisible) {
             MenuContentView()
                 .environment(model)
         } label: {
@@ -34,6 +32,10 @@ struct HangtimeApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Hangtime lives in the menu bar: closing the panel, Dashboard or Settings must not quit it. Without this,
+    /// SwiftUI terminated the app as soon as its last window (often the menu bar panel) closed.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         #if DEBUG
         if let i = CommandLine.arguments.firstIndex(of: "--render"), i + 1 < CommandLine.arguments.count {
