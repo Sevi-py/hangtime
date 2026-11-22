@@ -71,7 +71,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return
         }
-        Task { @MainActor in AppModel.shared.start() }
+        if CommandLine.arguments.contains("--reset-setup") {
+            // Puts Headroom back to a first-launch state so the setup assistant shows again:
+            // removes the login item, disconnects T3 Code and forgets notification choices.
+            Task { @MainActor in
+                AppModel.shared.setLaunchAtLogin(false)
+                await T3CodeHistory.revoke()
+                let d = UserDefaults.standard
+                for k in [SetupAssistant.completedKey, SetupAssistant.loginItemKey, "t3AccessRevoked",
+                          "notifyWhenAnyLimitResets", "lowThresholdAlerts", "notifyResetExpiry", "notifyLoggedOut",
+                          "armedResetAlertsV2", "lowAlerted"] {
+                    d.removeObject(forKey: k)
+                }
+                d.synchronize()
+                print("Setup reset. Launch Headroom to see the setup assistant.")
+                exit(0)
+            }
+            return
+        }
+        Task { @MainActor in
+            let firstLaunch = SetupAssistant.needsSetup()
+            AppModel.shared.start()
+            if firstLaunch { SetupAssistant.show() }
+        }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

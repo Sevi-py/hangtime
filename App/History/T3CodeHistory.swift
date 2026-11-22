@@ -130,7 +130,11 @@ enum T3CodeHistory {
         guard !revokedByUser else { throw T3Error.noToken("Access was turned off in Settings") }
         guard let url = endpoint() else { throw T3Error.notRunning }
         var token = storedToken()
-        if token == nil { token = try await issueToken() }
+        if token == nil {
+            // Don't connect behind the user's back while the setup assistant still has to ask.
+            guard UserDefaults.standard.bool(forKey: "didCompleteSetup") else { throw T3Error.noToken("Not connected yet") }
+            token = try await issueToken()
+        }
         // Renew quietly when the session is about to expire.
         if case .granted(let exp?, _) = await accessState(), exp.timeIntervalSinceNow < 7 * 86400 {
             token = (try? await issueToken()) ?? token

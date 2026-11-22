@@ -119,8 +119,8 @@ final class AppSettings {
         notifyWhenAnyLimitResets = d.object(forKey: "notifyWhenAnyLimitResets") as? Bool ?? false
         lowThresholdAlerts = d.object(forKey: "lowThresholdAlerts") as? Bool ?? false
         lowThreshold = d.object(forKey: "lowThreshold") as? Double ?? 0.1
-        notifyResetExpiry = d.object(forKey: "notifyResetExpiry") as? Bool ?? true
-        notifyLoggedOut = d.object(forKey: "notifyLoggedOut") as? Bool ?? true
+        notifyResetExpiry = d.object(forKey: "notifyResetExpiry") as? Bool ?? false
+        notifyLoggedOut = d.object(forKey: "notifyLoggedOut") as? Bool ?? false
         claudeProbe = d.object(forKey: ClaudeProvider.probeSettingKey) as? Bool ?? true
     }
 

@@ -55,7 +55,8 @@ final class AppModel {
 
     func start() {
         // Open at login by default (once); the user can turn it off from the panel or Settings.
-        if !UserDefaults.standard.bool(forKey: "didConfigureLoginItem") {
+        // On a fresh install the setup assistant takes care of it instead.
+        if SetupAssistant.isComplete, !UserDefaults.standard.bool(forKey: "didConfigureLoginItem") {
             UserDefaults.standard.set(true, forKey: "didConfigureLoginItem")
             setLaunchAtLogin(true)
         }

@@ -123,8 +123,5 @@ final class Notifier {
         // Keep the low-alert memory bounded.
         if low.count > 200 { low = Set(low.suffix(100)) }
         lowAlerted = low
-        if s.notifyWhenAnyLimitResets || s.lowThresholdAlerts || s.notifyResetExpiry || !armedNow.isEmpty {
-            Task { await requestAuthorization() }
-        }
     }
 }

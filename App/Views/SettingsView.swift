@@ -27,6 +27,11 @@ private struct GeneralSettings: View {
         Form {
             Section {
                 Toggle("Open at login", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
+                HStack {
+                    Text("Setup assistant")
+                    Spacer()
+                    Button("Show Setup Again…") { SetupAssistant.show() }
+                }
             }
             Section("Refreshing") {
                 Picker("Check usage", selection: $s.refreshMinutes) {
@@ -324,6 +329,15 @@ private struct NotificationSettings: View {
         }
         .formStyle(.grouped)
         .frame(height: 360)
+        // Ask for notification permission only once the user turns an alert on.
+        .onChange(of: s.notifyWhenAnyLimitResets) { _, on in if on { requestPermission() } }
+        .onChange(of: s.lowThresholdAlerts) { _, on in if on { requestPermission() } }
+        .onChange(of: s.notifyResetExpiry) { _, on in if on { requestPermission() } }
+        .onChange(of: s.notifyLoggedOut) { _, on in if on { requestPermission() } }
+    }
+
+    private func requestPermission() {
+        Task { await Notifier.shared.requestAuthorization() }
     }
 }
 
