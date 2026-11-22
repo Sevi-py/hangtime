@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "Casks/**", "scripts/install.sh"]
+  pull_request:
+    paths-ignore: ["**.md", "Casks/**", "scripts/install.sh"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (universal)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up
+        id: setup
+        uses: ./.github/actions/setup
+
+      - name: Build Release for Apple silicon and Intel
+        run: |
+          set -o pipefail
+          xcodebuild -project Hangtime.xcodeproj -scheme Hangtime -configuration Release \
+            -destination 'generic/platform=macOS' -derivedDataPath build/ci \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- \
+            COMPILATION_CACHE_ENABLE_CACHING=YES build \
+            | xcbeautify --renderer github-actions
+
+      - name: Check architectures
+        run: |
+          APP=build/ci/Build/Products/Release/Hangtime.app
+          for bin in "$APP/Contents/MacOS/Hangtime" "$APP"/Contents/PlugIns/*.appex/Contents/MacOS/*; do
+            archs=$(lipo -archs "$bin")
+            echo "$(basename "$bin"): $archs"
+            [[ "$archs" == *arm64* && "$archs" == *x86_64* ]]
+          done
+
+      - name: Prune compilation cache
+        if: steps.setup.outputs.cache-hit != 'true'
+        run: |
+          # Keep the cache from growing without bound; a fresh one is rebuilt on the next miss.
+          size=$(du -sm build/ci/CompilationCache.noindex 2>/dev/null | cut -f1 || echo 0)
+          if (( size > 1500 )); then rm -rf build/ci/CompilationCache.noindex; fi
+
+      - name: Save compilation cache
+        if: steps.setup.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/ci/CompilationCache.noindex
+            build/ci/SDKExplicitPrecompiledModules
+          key: ${{ steps.setup.outputs.cache-key }}

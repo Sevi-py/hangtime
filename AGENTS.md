@@ -44,8 +44,9 @@ Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/
 
 ## Releases
 
-- `./scripts/release.sh <x.y.z>` is a dry run (signed, notarized artifacts in `dist/`); add `--publish` to ship.
-  Only publish when the user asks for a release.
+- Only release when the user asks. `./scripts/release.sh <x.y.z>` bumps `MARKETING_VERSION` on main, and that push
+  makes GitHub Actions build, notarize and publish. Don't bump `MARKETING_VERSION` for any other reason.
+- `./scripts/build-release.sh <x.y.z>` is a dry run (signed, notarized artifacts in `dist/`), safe for testing.
 - Signing team is `8XX544GLPH` (Flarely e.U.). The app group is team-prefixed, so changing the team changes where
   widget-shared settings live.
 - The in-app updater (`App/Support/Updater.swift`) only accepts updates signed by that team and notarized.

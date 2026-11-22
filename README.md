@@ -111,12 +111,23 @@ their owners.
 
 ## Releasing
 
+Releases are universal (Apple silicon and Intel), signed with Developer ID and notarized.
+
 ```sh
-./scripts/release.sh 1.2.0            # dry run: Developer ID sign, notarize, staple, package into dist/1.2.0
-./scripts/release.sh 1.2.0 --publish  # also bump project.yml, tag v1.2.0, create the GitHub release, update the cask
+./scripts/release.sh 1.2.0           # bump the version on main; GitHub Actions builds and publishes
+./scripts/release.sh 1.2.0 --local   # same, but build and publish from this Mac
+./scripts/build-release.sh 1.2.0     # dry run: signed, notarized zip + DMG in dist/1.2.0, nothing published
 ```
 
-One-time setup on the release Mac:
+A release ships only when `MARKETING_VERSION` in `project.yml` changes on `main` to a version without a tag
+(`.github/workflows/release.yml`). It then tags `v1.2.0`, creates the GitHub release with generated notes and
+updates the cask. Every other push only runs CI (`.github/workflows/ci.yml`), which builds a universal binary
+using Xcode's compilation cache.
+
+GitHub Actions needs these repository secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8` (an App Store
+Connect team API key with the Admin role, used for cloud signing and notarization).
+
+For `--local` and dry runs on a Mac:
 
 - Xcode signed in with an account on team `8XX544GLPH` (Flarely e.U.). Xcode uses the cloud-managed
   Developer ID certificate.
