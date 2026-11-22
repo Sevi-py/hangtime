@@ -11,6 +11,7 @@
 		06C125D42A61E1AFEA41D19D /* Pricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D67398E0AC0A886CA5B362 /* Pricing.swift */; };
 		09276D864B596654C95A2B71 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57702B6862296A94EABCE4AE /* WidgetKit.framework */; };
 		16FB06DF9B18139A08424FC5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B70786DC4283C38D892754 /* Components.swift */; };
+		184D6F763C39FE4F1DA416B1 /* OverlayScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1FBCDAEBF2084F98C783C9B /* OverlayScroller.swift */; };
 		1A09D6AABFD68B6F23DF29DE /* LocalLogHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711AD10CAEC8CC5D1F88DBDA /* LocalLogHistory.swift */; };
 		2974EEA1C928B199B6B4DCED /* HeadroomApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13EF8EF54D23913AA87C8045 /* HeadroomApp.swift */; };
 		40076FED3C3F70C98B9FB605 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E50DD160845AB4A821B4ED /* Notifier.swift */; };
@@ -104,6 +105,7 @@
 		90CA06E4F606D8BCE93053DB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		934328B58A20CE3D98264708 /* UsageControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageControls.swift; sourceTree = "<group>"; };
 		9D2BE599D044CDAB1F08D7AC /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A1FBCDAEBF2084F98C783C9B /* OverlayScroller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayScroller.swift; sourceTree = "<group>"; };
 		C1A642B110FFF889AEF96702 /* ClaudeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeProvider.swift; sourceTree = "<group>"; };
 		D1FBF52279851A81AE1A9C5D /* UsageWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageWidgets.swift; sourceTree = "<group>"; };
 		D33C7C33244898E3C423EC8F /* AntigravityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityProvider.swift; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				90CA06E4F606D8BCE93053DB /* DashboardView.swift */,
 				17270CFBAB1B588BB85B45D7 /* MenuBarLabel.swift */,
 				51F6567CADF45BC749319E9E /* MenuContentView.swift */,
+				A1FBCDAEBF2084F98C783C9B /* OverlayScroller.swift */,
 				14DC34DC04563D1C1363B36E /* SettingsView.swift */,
 			);
 			path = Views;
@@ -383,6 +386,7 @@
 				4A4BA9190F2CEAA46C3219A3 /* MenuContentView.swift in Sources */,
 				731F48B7A25A76CDDA3865E1 /* Models.swift in Sources */,
 				40076FED3C3F70C98B9FB605 /* Notifier.swift in Sources */,
+				184D6F763C39FE4F1DA416B1 /* OverlayScroller.swift in Sources */,
 				06C125D42A61E1AFEA41D19D /* Pricing.swift in Sources */,
 				FF9AC99A8714C91B7D27922F /* Renderer.swift in Sources */,
 				54AAF33BE7476DC78AD43035 /* Settings.swift in Sources */,

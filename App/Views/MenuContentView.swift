@@ -34,6 +34,7 @@ struct MenuContentView: View {
                     }
                 }
                 .padding(.bottom, 4)
+                .overlayScroller()
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
             }
             .scrollBounceBehavior(.basedOnSize)
