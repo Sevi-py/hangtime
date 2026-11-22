@@ -47,7 +47,7 @@ struct MenuContentView: View {
         }
         .padding(.bottom, 5)
         .frame(width: 360)
-        .environment(\.headroomAnimates, true)
+        .environment(\.hangtimeAnimates, true)
         .onAppear {
             SettingsOpener.action = openSettings
             if (model.lastRefresh.map { Date.now.timeIntervalSince($0) > 60 } ?? true) {
@@ -101,7 +101,7 @@ struct MenuContentView: View {
             }
             .keyboardShortcut(",")
             MenuDivider()
-            MenuRow(title: "Quit Headroom", systemImage: "rectangle.portrait.and.arrow.right", shortcut: "⌘Q") {
+            MenuRow(title: "Quit Hangtime", systemImage: "rectangle.portrait.and.arrow.right", shortcut: "⌘Q") {
                 NSApp.terminate(nil)
             }
             .keyboardShortcut("q")

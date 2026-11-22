@@ -70,7 +70,7 @@ final class Notifier {
 
             if s.notifyLoggedOut, snap.status == .loggedOut, old[p]?.status != .loggedOut, old[p] != nil {
                 post("loggedout.\(p.rawValue)", "\(p.displayName) is signed out",
-                     "Open Headroom to sign in again.")
+                     "Open Hangtime to sign in again.")
             }
 
             for w in snap.windows {

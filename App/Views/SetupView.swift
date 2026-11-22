@@ -40,7 +40,7 @@ enum SetupAssistant {
                          backing: .buffered, defer: false)
         w.titlebarAppearsTransparent = true
         w.titleVisibility = .hidden
-        w.title = "Welcome to Headroom"
+        w.title = "Welcome to Hangtime"
         w.isMovableByWindowBackground = true
         w.isReleasedWhenClosed = false
         w.contentView = host
@@ -178,7 +178,7 @@ struct SetupView: View {
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
         case .done:
-            Button("Start Using Headroom", action: onFinish)
+            Button("Start Using Hangtime", action: onFinish)
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
@@ -351,7 +351,7 @@ private struct WelcomePage: View {
                 .opacity(appeared ? 1 : 0)
                 .offset(y: floating ? -5 : 3)
                 .padding(.bottom, 22)
-            Text("Welcome to Headroom")
+            Text("Welcome to Hangtime")
                 .font(.system(size: 36, weight: .bold))
                 .staggerIn(2)
             Text("Your Claude Code, Codex, Grok and Antigravity limits,\nalways one glance away in the menu bar.")
@@ -420,7 +420,7 @@ private struct ProvidersPage: View {
 
     var body: some View {
         SetupPage(symbol: "terminal.fill", tint: .indigo, title: "Your coding tools",
-                  subtitle: "Headroom looks for the command-line tools on your Mac. Turn off the ones you don't want to track, or point it at a custom command.") {
+                  subtitle: "Hangtime looks for the command-line tools on your Mac. Turn off the ones you don't want to track, or point it at a custom command.") {
             VStack(spacing: 0) {
                 ForEach(Array(model.settings.order.enumerated()), id: \.element) { i, p in
                     if i > 0 { Divider().padding(.leading, 62) }
@@ -554,7 +554,7 @@ private struct AccountsPage: View {
 
     var body: some View {
         SetupPage(symbol: "person.badge.key.fill", tint: .orange, title: "Sign-in & access",
-                  subtitle: "Headroom uses the sign-in your tools already have, so there's no new account and no password to enter.") {
+                  subtitle: "Hangtime uses the sign-in your tools already have, so there's no new account and no password to enter.") {
             if model.visibleProviders.isEmpty {
                 VStack(spacing: 6) {
                     Image(systemName: "tray").font(.title2).foregroundStyle(.secondary)
@@ -583,7 +583,7 @@ private struct AccountsPage: View {
                     .frame(width: 22)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("About Keychain access").font(.system(size: 12.5, weight: .semibold))
-                    Text("Headroom reads your tools' sign-in from the Keychain and only uses it to ask each provider for your limits. If macOS asks whether Headroom may use a Keychain item, choose **Always Allow** so it doesn't ask again.")
+                    Text("Hangtime reads your tools' sign-in from the Keychain and only uses it to ask each provider for your limits. If macOS asks whether Hangtime may use a Keychain item, choose **Always Allow** so it doesn't ask again.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -693,7 +693,7 @@ private struct T3Page: View {
         let connected: Bool = { if case .granted = state { true } else { false } }()
         let busy = model.busy.contains("t3")
         SetupPage(symbol: "chart.bar.xaxis", tint: .teal, title: "Connect T3 Code",
-                  subtitle: "If you use T3 Code, Headroom can read its usage statistics for a more complete history: every environment, priced and de-duplicated.") {
+                  subtitle: "If you use T3 Code, Hangtime can read its usage statistics for a more complete history: every environment, priced and de-duplicated.") {
             ConnectionGraphic(connected: connected, busy: busy, available: state != .notInstalled)
                 .padding(.vertical, 18)
                 .staggerIn(3)
@@ -705,7 +705,7 @@ private struct T3Page: View {
                 case .notInstalled:
                     VStack(spacing: 6) {
                         Text("T3 Code isn't installed").font(.headline)
-                        Text("No problem. Headroom reads your history from the tools' local session logs instead. You can connect T3 Code later in Settings › History.")
+                        Text("No problem. Hangtime reads your history from the tools' local session logs instead. You can connect T3 Code later in Settings › History.")
                             .font(.callout).foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .lineLimit(nil)
@@ -713,7 +713,7 @@ private struct T3Page: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 case .granted:
-                    Text("Headroom shows up as “Headroom” under Sharing & access in T3 Code. Access renews on its own.")
+                    Text("Hangtime shows up as “Hangtime” under Sharing & access in T3 Code. Access renews on its own.")
                         .font(.callout).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .lineLimit(nil)
@@ -724,7 +724,7 @@ private struct T3Page: View {
                     VStack(spacing: 14) {
                         VStack(alignment: .leading, spacing: 8) {
                             Bullet(symbol: "lock.fill", text: "Read-only: usage statistics, nothing else")
-                            Bullet(symbol: "person.badge.shield.checkmark.fill", text: "Shows up as “Headroom” under Sharing & access in T3 Code")
+                            Bullet(symbol: "person.badge.shield.checkmark.fill", text: "Shows up as “Hangtime” under Sharing & access in T3 Code")
                             Bullet(symbol: "xmark.circle.fill", text: "Revoke any time, here in Settings or in T3 Code")
                         }
                         .padding(14)
@@ -767,7 +767,7 @@ private struct Bullet: View {
     }
 }
 
-/// Headroom ⟷ T3 Code, with a marching dotted line that turns solid once connected.
+/// Hangtime ⟷ T3 Code, with a marching dotted line that turns solid once connected.
 private struct ConnectionGraphic: View {
     var connected: Bool
     var busy: Bool
@@ -999,7 +999,7 @@ private struct WidgetsPage: View {
     var body: some View {
         let entry = UsageEntry(date: .now, state: state, intent: nil)
         SetupPage(symbol: "square.grid.2x2.fill", tint: .blue, title: "Add widgets",
-                  subtitle: "Put your limits on the desktop or in Notification Center. They update on their own whenever Headroom checks.") {
+                  subtitle: "Put your limits on the desktop or in Notification Center. They update on their own whenever Hangtime checks.") {
             HStack(alignment: .center, spacing: 34) {
                 ZStack {
                     widget(AnyView(SingleGaugeView(entry: entry, config: SingleGaugeIntent())), size: .init(width: 170, height: 170))
@@ -1019,7 +1019,7 @@ private struct WidgetsPage: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     StepRow(n: 1, text: "Right-click an empty spot on your desktop and choose **Edit Widgets…**")
-                    StepRow(n: 2, text: "Search for **Headroom**.")
+                    StepRow(n: 2, text: "Search for **Hangtime**.")
                     StepRow(n: 3, text: "Drag a widget onto the desktop or into Notification Center. Right-click it and choose **Edit** to pick a provider or limit.")
                     Divider()
                     Label {
@@ -1099,7 +1099,7 @@ private struct DonePage: View {
                 .font(.system(size: 32, weight: .bold))
                 .padding(.top, 26)
                 .staggerIn(2)
-            Text("Headroom lives in your menu bar. Click it any time to see what's left.")
+            Text("Hangtime lives in your menu bar. Click it any time to see what's left.")
                 .font(.system(size: 14))
                 .foregroundStyle(.secondary)
                 .padding(.top, 6)
@@ -1129,7 +1129,7 @@ private struct DonePage: View {
     }
 }
 
-/// A slice of a menu bar with the real Headroom item, softly highlighted.
+/// A slice of a menu bar with the real Hangtime item, softly highlighted.
 private struct MenuBarMock: View {
     @Environment(AppModel.self) private var model
     var pulse: Bool

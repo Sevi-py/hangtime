@@ -1,4 +1,4 @@
-name: Headroom
+name: Hangtime
 options:
   bundleIdPrefix: app.headroom
   deploymentTarget:
@@ -14,7 +14,7 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     ENABLE_HARDENED_RUNTIME: YES
 targets:
-  Headroom:
+  Hangtime:
     type: application
     platform: macOS
     sources:
@@ -28,13 +28,13 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.headroom.mac
         INFOPLIST_FILE: Config/App-Info.plist
-        CODE_SIGN_ENTITLEMENTS: Config/Headroom.entitlements
+        CODE_SIGN_ENTITLEMENTS: Config/Hangtime.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
     dependencies:
-      - target: HeadroomWidgets
+      - target: HangtimeWidgets
         embed: true
-  HeadroomWidgets:
+  HangtimeWidgets:
     type: app-extension
     platform: macOS
     sources:

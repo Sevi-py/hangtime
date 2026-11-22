@@ -59,7 +59,7 @@ enum T3CodeHistory {
         guard let token else { return }
         var add = base
         add[kSecValueData as String] = Data(token.utf8)
-        add[kSecAttrLabel as String] = "Headroom – T3 Code usage access"
+        add[kSecAttrLabel as String] = "Hangtime – T3 Code usage access"
         SecItemAdd(add as CFDictionary, nil)
     }
 
@@ -69,11 +69,11 @@ enum T3CodeHistory {
         set { UserDefaults.standard.set(newValue, forKey: "t3SessionID") }
     }
 
-    /// Issues a read-only (`diagnostics:read`) bearer session for Headroom and stores it in the Keychain.
-    /// If a previous Headroom session exists, it is revoked afterwards so they don't pile up.
+    /// Issues a read-only (`diagnostics:read`) bearer session for Hangtime and stores it in the Keychain.
+    /// If a previous Hangtime session exists, it is revoked afterwards so they don't pile up.
     static func issueToken(command: String = "t3") async throws -> String {
         let r = try await Shell.shared.runCLI(command, ["auth", "session", "issue", "--scope", "diagnostics:read",
-                                                        "--ttl", "90d", "--label", "Headroom", "--json"], timeout: 30)
+                                                        "--ttl", "90d", "--label", "Hangtime", "--json"], timeout: 30)
         guard r.ok, let o = JSON.object(r.stdout), let token = JSON.string(o["token"]), !token.isEmpty else {
             let msg = (r.stderr + r.stdout).trimmingCharacters(in: .whitespacesAndNewlines)
             throw T3Error.noToken(msg.isEmpty ? "Is T3 Code installed and has it been opened once?" : String(msg.prefix(200)))
@@ -90,13 +90,19 @@ enum T3CodeHistory {
     static func revoke(command: String = "t3") async {
         var ids = Set<String>()
         if let id = sessionID { ids.insert(id) }
-        // Also clean up any other Headroom sessions (e.g. from an older install).
-        for sess in await sessions(command: command) where JSON.string((sess["client"] as? [String: Any])?["label"]) == "Headroom" {
+        // Also clean up any other sessions of ours (e.g. from an older install, including the "Headroom" era).
+        for sess in await sessions(command: command) where isOurs(sess) {
             if let id = JSON.string(sess["sessionId"]) { ids.insert(id) }
         }
         for id in ids { _ = try? await Shell.shared.runCLI(command, ["auth", "session", "revoke", id], timeout: 20) }
         store(token: nil)
         sessionID = nil
+    }
+
+    /// Sessions are labeled with the app name; "Headroom" was the app's name before 1.0.
+    private static func isOurs(_ sess: [String: Any]) -> Bool {
+        let label = JSON.string((sess["client"] as? [String: Any])?["label"])
+        return label == "Hangtime" || label == "Headroom"
     }
 
     static func sessions(command: String = "t3") async -> [[String: Any]] {
@@ -112,8 +118,8 @@ enum T3CodeHistory {
         let all = await sessions(command: command)
         var match = all.first(where: { JSON.string($0["sessionId"]) == sessionID })
         if match == nil, sessionID == nil {
-            // Token issued before we tracked the session id: adopt the newest "Headroom" session.
-            match = all.filter { JSON.string(($0["client"] as? [String: Any])?["label"]) == "Headroom" }
+            // Token issued before we tracked the session id: adopt the newest session of ours.
+            match = all.filter(isOurs)
                 .max { (JSON.date($0["issuedAt"]) ?? .distantPast) < (JSON.date($1["issuedAt"]) ?? .distantPast) }
             if let id = match.flatMap({ JSON.string($0["sessionId"]) }) { sessionID = id }
         }

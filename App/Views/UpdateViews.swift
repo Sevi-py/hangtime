@@ -11,7 +11,7 @@ struct UpdateSettingsSection: View {
                 .disabled(!updater.autoCheck)
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Headroom \(Updater.currentVersion)")
+                    Text("Hangtime \(Updater.currentVersion)")
                     Text(statusLine)
                         .font(.caption)
                         .foregroundStyle(statusIsError ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))

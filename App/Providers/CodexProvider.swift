@@ -11,7 +11,7 @@ struct CodexProvider: UsageProvider {
         guard let (exe, pre) = await Shell.shared.resolve(command) else { throw ShellError.notFound(command) }
         let rpc = JSONRPCProcess(exe: exe, args: pre + ["app-server"], env: await Shell.shared.environment())
         try rpc.start()
-        _ = try await rpc.request("initialize", ["clientInfo": ["name": "headroom", "title": "Headroom", "version": "1.0"]],
+        _ = try await rpc.request("initialize", ["clientInfo": ["name": "hangtime", "title": "Hangtime", "version": "1.0"]],
                                   timeout: 30)
         rpc.notify("initialized")
         return rpc

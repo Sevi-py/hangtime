@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct HeadroomApp: App {
+struct HangtimeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var model = AppModel.shared
 
@@ -72,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         if CommandLine.arguments.contains("--reset-setup") {
-            // Puts Headroom back to a first-launch state so the setup assistant shows again:
+            // Puts Hangtime back to a first-launch state so the setup assistant shows again:
             // removes the login item, disconnects T3 Code and forgets notification choices.
             Task { @MainActor in
                 AppModel.shared.setLaunchAtLogin(false)
@@ -84,7 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     d.removeObject(forKey: k)
                 }
                 d.synchronize()
-                print("Setup reset. Launch Headroom to see the setup assistant.")
+                print("Setup reset. Launch Hangtime to see the setup assistant.")
                 exit(0)
             }
             return
@@ -94,14 +94,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AppModel.shared.start()
             Updater.shared.start()
             if let version = Updater.shared.consumeJustInstalled() {
-                AppModel.shared.toast = "Updated to Headroom \(version)"
+                AppModel.shared.toast = "Updated to Hangtime \(version)"
             }
             if firstLaunch { SetupAssistant.show() }
         }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        // headroom://refresh, headroom://settings (used by widgets & controls)
+        // hangtime://refresh, hangtime://settings (used by widgets & controls)
         for url in urls {
             switch url.host {
             case "settings":

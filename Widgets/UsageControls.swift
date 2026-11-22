@@ -60,7 +60,7 @@ struct UsageControl: ControlWidget {
 }
 
 @main
-struct HeadroomWidgets: WidgetBundle {
+struct HangtimeWidgets: WidgetBundle {
     var body: some Widget {
         ProviderLimitsWidget()
         OverviewWidget()

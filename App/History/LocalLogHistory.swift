@@ -314,7 +314,7 @@ enum HistoryLoader {
                 return UsageHistory(days: days.filter { providers.contains($0.provider) }, source: .t3code)
             } catch {
                 if preference == .t3code {
-                    NSLog("Headroom: T3 Code history unavailable: \(error.localizedDescription)")
+                    NSLog("Hangtime: T3 Code history unavailable: \(error.localizedDescription)")
                 }
             }
         }

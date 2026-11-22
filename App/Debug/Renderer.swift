@@ -3,7 +3,7 @@ import SwiftUI
 import AppKit
 import WidgetKit
 
-/// `Headroom --render <dir>`: renders the panel, settings panes and widgets to PNGs (light + dark)
+/// `Hangtime --render <dir>`: renders the panel, settings panes and widgets to PNGs (light + dark)
 /// for visual review without touching the menu bar.
 @MainActor
 enum DebugRenderer {

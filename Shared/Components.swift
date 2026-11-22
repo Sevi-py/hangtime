@@ -7,11 +7,11 @@ import Charts
 /// if you had used the limit perfectly evenly.
 public extension EnvironmentValues {
     /// Animate value changes (only in the open panel and the Dashboard, not in widgets).
-    @Entry var headroomAnimates: Bool = false
+    @Entry var hangtimeAnimates: Bool = false
 }
 
 public struct LimitBar: View {
-    @Environment(\.headroomAnimates) private var animates
+    @Environment(\.hangtimeAnimates) private var animates
     public var remaining: Double
     public var pace: Double?
     public var color: Color
@@ -55,7 +55,7 @@ public struct LimitBar: View {
 // MARK: - Ring gauge
 
 public struct RingGauge: View {
-    @Environment(\.headroomAnimates) private var animates
+    @Environment(\.hangtimeAnimates) private var animates
     public var remaining: Double
     public var pace: Double?
     public var color: Color
@@ -190,7 +190,7 @@ public struct WindowRow: View {
     public var now: Date
     /// When the numbers were read (for stale values).
     public var asOf: Date?
-    @Environment(\.headroomAnimates) private var animates
+    @Environment(\.hangtimeAnimates) private var animates
 
     private var stale: Bool { window.isStale == true }
     /// A stale window that hadn't started when we last saw it: we can't know what's left now.

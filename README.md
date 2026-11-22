@@ -1,4 +1,4 @@
-# Headroom
+# Hangtime
 
 A native macOS menu bar app that shows how much of your AI coding subscriptions you have **left**, for
 **Claude Code**, **OpenAI Codex**, **xAI Grok CLI** and **Google Antigravity CLI** (`agy`). It also has desktop widgets, Control Center controls,
@@ -11,15 +11,15 @@ Requires macOS 26 (Tahoe) or later.
 **Homebrew**
 
 ```sh
-brew tap sevi-py/headroom https://github.com/Sevi-py/usage-widget
-brew install --cask sevi-py/headroom/headroom
+brew tap sevi-py/hangtime https://github.com/Sevi-py/usage-widget
+brew install --cask sevi-py/hangtime/hangtime
 ```
 
-**Direct download**: get `Headroom-<version>.dmg` (or `.zip`) from
-[Releases](https://github.com/Sevi-py/usage-widget/releases/latest) and move Headroom to Applications.
+**Direct download**: get `Hangtime-<version>.dmg` (or `.zip`) from
+[Releases](https://github.com/Sevi-py/usage-widget/releases/latest) and move Hangtime to Applications.
 Builds are signed with Developer ID and notarized by Apple.
 
-**Updates**: Headroom checks GitHub Releases every few hours. It installs updates the same way it was installed:
+**Updates**: Hangtime checks GitHub Releases every few hours. It installs updates the same way it was installed:
 `brew upgrade` for Homebrew installs, otherwise it downloads the release, verifies its signature and notarization,
 and replaces itself. Settings, the setup state and placed widgets are kept. Turn off automatic checks or installs
 in Settings → General → Updates.
@@ -73,12 +73,12 @@ in Settings → General → Updates.
 
 How it stays robust to CLI updates:
 
-- Headroom never refreshes OAuth tokens itself. The CLIs rotate refresh tokens, so doing that would sign them out.
-  When a token is stale, Headroom asks the CLI to do something authenticated, and the CLI refreshes the token
+- Hangtime never refreshes OAuth tokens itself. The CLIs rotate refresh tokens, so doing that would sign them out.
+  When a token is stale, Hangtime asks the CLI to do something authenticated, and the CLI refreshes the token
   itself.
 - Codex is queried through the CLI's own JSON-RPC protocol.
 - All payloads are parsed leniently. Unknown limit types still show up, with a readable title.
-- Claude's usage endpoint is heavily rate limited. Headroom honors `Retry-After` across launches, polls at most
+- Claude's usage endpoint is heavily rate limited. Hangtime honors `Retry-After` across launches, polls at most
   every 2.5 minutes, and otherwise shows the freshest of its own cache and Claude Code's
   `cachedUsageUtilization`.
 
@@ -87,15 +87,15 @@ How it stays robust to CLI updates:
 Requirements: Xcode 26+, macOS 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```sh
-./scripts/install.sh   # build, replace /Applications/Headroom.app, reload placed widgets, relaunch
+./scripts/install.sh   # build, replace /Applications/Hangtime.app, reload placed widgets, relaunch
 ```
 
 Or manually:
 
 ```sh
 xcodegen generate
-xcodebuild -project Headroom.xcodeproj -scheme Headroom -configuration Release -derivedDataPath build -allowProvisioningUpdates build
-cp -R build/Build/Products/Release/Headroom.app /Applications/
+xcodebuild -project Hangtime.xcodeproj -scheme Hangtime -configuration Release -derivedDataPath build -allowProvisioningUpdates build
+cp -R build/Build/Products/Release/Hangtime.app /Applications/
 ```
 
 To sign with a different team, change `DEVELOPMENT_TEAM` in `project.yml`. The app group is derived from the
@@ -103,8 +103,8 @@ team ID.
 
 Debug builds include diagnostics:
 
-- `Headroom --dump [--history]` prints everything it fetched as JSON.
-- `Headroom --render <dir>` renders the panel, settings and widgets to PNGs in light and dark mode.
+- `Hangtime --dump [--history]` prints everything it fetched as JSON.
+- `Hangtime --render <dir>` renders the panel, settings and widgets to PNGs in light and dark mode.
 
 Provider logos come from [LobeHub Icons](https://github.com/lobehub/lobe-icons) (MIT). The logos are trademarks of
 their owners.
@@ -124,5 +124,5 @@ One-time setup on the release Mac:
   `xcrun notarytool store-credentials headroom-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>`
 - `gh` signed in with push access.
 
-The Homebrew cask lives in [`Casks/headroom.rb`](Casks/headroom.rb), so this repo doubles as the tap. Releases
+The Homebrew cask lives in [`Casks/hangtime.rb`](Casks/hangtime.rb), so this repo doubles as the tap. Releases
 and the tap only work for others once the repo is public.

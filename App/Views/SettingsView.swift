@@ -209,7 +209,7 @@ private struct ProviderDetail: View {
                 } header: {
                     Text("Usage checks")
                 } footer: {
-                    Text("Anthropic often blocks usage checks for a while. Headroom then sends a one-token request, at most every 10 minutes, and reads your limits from the reply: Fable for session, weekly and Fable usage, and Haiku when Fable is used up or not needed. It uses a tiny bit of your session, and starts a new session if none is running. Banked resets update once regular checks work again.")
+                    Text("Anthropic often blocks usage checks for a while. Hangtime then sends a one-token request, at most every 10 minutes, and reads your limits from the reply: Fable for session, weekly and Fable usage, and Haiku when Fable is used up or not needed. It uses a tiny bit of your session, and starts a new session if none is running. Banked resets update once regular checks work again.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -389,7 +389,7 @@ private struct HistorySettings: View {
     }
 }
 
-/// Lets the user grant / renew / revoke Headroom's read-only access to T3 Code without a terminal.
+/// Lets the user grant / renew / revoke Hangtime's read-only access to T3 Code without a terminal.
 private struct T3AccessSection: View {
     @Environment(AppModel.self) private var model
 
@@ -436,7 +436,7 @@ private struct T3AccessSection: View {
         } header: {
             Text("T3 Code access")
         } footer: {
-            Text("Headroom uses a read-only T3 Code session (usage statistics only) to read your usage across providers. It shows up as “Headroom” under Sharing & access in T3 Code.")
+            Text("Hangtime uses a read-only T3 Code session (usage statistics only) to read your usage across providers. It shows up as “Hangtime” under Sharing & access in T3 Code.")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .task { await model.refreshT3Access() }
@@ -473,7 +473,7 @@ private struct AboutSettings: View {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .frame(width: 96, height: 96)
-            Text("Headroom").font(.title.weight(.semibold))
+            Text("Hangtime").font(.title.weight(.semibold))
             Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"))")
                 .foregroundStyle(.secondary)
             Text("See what's left of your Claude Code, Codex, Grok and Antigravity subscriptions.")

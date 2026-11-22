@@ -2,7 +2,7 @@ import Foundation
 import AppKit
 import WidgetKit
 
-/// Checks GitHub Releases for a newer Headroom and installs it the same way the running copy was installed:
+/// Checks GitHub Releases for a newer Hangtime and installs it the same way the running copy was installed:
 /// through `brew upgrade` for Homebrew installs, otherwise by downloading the notarized zip, verifying its
 /// signature and replacing the app bundle in place. Settings live in UserDefaults keyed by the bundle ID, so
 /// they (and the "setup done" flag) survive either path. After installing, the widget extension and
@@ -13,7 +13,7 @@ final class Updater {
     static let shared = Updater()
 
     static let repo = "Sevi-py/usage-widget"
-    static let caskToken = "headroom"
+    static let caskToken = "hangtime"
     /// Updates must be signed with this team's Developer ID (same team as release builds).
     static let teamID = "8XX544GLPH"
 
@@ -151,7 +151,7 @@ final class Updater {
             ?? URL(string: "https://api.github.com/repos/\(Self.repo)/releases/latest")!
         var req = URLRequest(url: feed, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
         req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        req.setValue("Headroom/\(Self.currentVersion)", forHTTPHeaderField: "User-Agent")
+        req.setValue("Hangtime/\(Self.currentVersion)", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: req)
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
             throw UpdateError("GitHub answered \(http.statusCode)")
@@ -167,7 +167,7 @@ final class Updater {
         }
         let p = try JSONDecoder().decode(Payload.self, from: data)
         let version = p.tag_name.hasPrefix("v") ? String(p.tag_name.dropFirst()) : p.tag_name
-        let zip = p.assets.first { $0.name.hasPrefix("Headroom") && $0.name.hasSuffix(".zip") }?.browser_download_url
+        let zip = p.assets.first { $0.name.hasPrefix("Hangtime") && $0.name.hasSuffix(".zip") }?.browser_download_url
         return Release(version: version, notes: p.body ?? "", page: p.html_url, zip: zip)
     }
 
@@ -221,13 +221,13 @@ final class Updater {
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
             throw UpdateError("Download failed (\(http.statusCode))")
         }
-        let work = FileManager.default.temporaryDirectory.appendingPathComponent("HeadroomUpdate-\(UUID().uuidString)")
+        let work = FileManager.default.temporaryDirectory.appendingPathComponent("HangtimeUpdate-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
-        let zip = work.appendingPathComponent("Headroom.zip")
+        let zip = work.appendingPathComponent("Hangtime.zip")
         try FileManager.default.moveItem(at: file, to: zip)
         let unzip = try await run("/usr/bin/ditto", ["-x", "-k", zip.path, work.path])
         guard unzip.status == 0 else { throw UpdateError("Could not unpack the update") }
-        let app = work.appendingPathComponent("Headroom.app")
+        let app = work.appendingPathComponent("Hangtime.app")
 
         // Must be signed by our team with a valid Developer ID signature, and notarized.
         let requirement = "anchor apple generic and certificate leaf[subject.OU] = \"\(Self.teamID)\""
@@ -252,7 +252,7 @@ final class Updater {
         guard fm.isWritableFile(atPath: target.deletingLastPathComponent().path) else {
             throw UpdateError("No permission to replace \(target.path). Download the update from GitHub instead.")
         }
-        let backup = fm.temporaryDirectory.appendingPathComponent("Headroom-old-\(UUID().uuidString).app")
+        let backup = fm.temporaryDirectory.appendingPathComponent("Hangtime-old-\(UUID().uuidString).app")
         try fm.moveItem(at: target, to: backup)
         do {
             try fm.moveItem(at: newApp, to: target)
@@ -270,16 +270,16 @@ final class Updater {
         let pid = ProcessInfo.processInfo.processIdentifier
         let script = """
         while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done
-        pkill -f 'HeadroomWidgets.appex' 2>/dev/null
+        pkill -f 'HangtimeWidgets.appex' 2>/dev/null
         /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$1" >/dev/null 2>&1
-        pluginkit -a "$1/Contents/PlugIns/HeadroomWidgets.appex" 2>/dev/null
+        pluginkit -a "$1/Contents/PlugIns/HangtimeWidgets.appex" 2>/dev/null
         killall chronod 2>/dev/null
         sleep 0.5
         open "$1"
         """
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/bin/sh")
-        p.arguments = ["-c", script, "headroom-relaunch", app]
+        p.arguments = ["-c", script, "hangtime-relaunch", app]
         p.standardOutput = FileHandle.nullDevice
         p.standardError = FileHandle.nullDevice
         do {

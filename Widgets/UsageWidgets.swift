@@ -59,7 +59,7 @@ struct StatusPlaceholder: View {
             case .loggedOut?:
                 Image(systemName: "person.crop.circle.badge.exclamationmark").font(.title2).foregroundStyle(.orange)
                 Text("Signed out").font(.caption.weight(.semibold))
-                Text("Open Headroom to sign in").font(.caption2).foregroundStyle(.secondary)
+                Text("Open Hangtime to sign in").font(.caption2).foregroundStyle(.secondary)
             case nil:
                 Image(systemName: "terminal").font(.title2).foregroundStyle(.secondary)
                 Text("Not set up").font(.caption.weight(.semibold))
@@ -136,7 +136,7 @@ struct ProviderLimitsView: View {
                 if family != .systemSmall, let snap, snap.availableResetCount > 0 { resetsFooter(snap) }
             }
         }
-        .widgetURL(URL(string: "headroom://refresh"))
+        .widgetURL(URL(string: "hangtime://refresh"))
     }
 
     private func shortTitle(_ w: UsageWindow) -> String {
@@ -208,7 +208,7 @@ struct SingleGaugeWidget: Widget {
         AppIntentConfiguration(kind: "SingleGauge", intent: SingleGaugeIntent.self, provider: IntentProvider<SingleGaugeIntent>()) { entry in
             SingleGaugeView(entry: entry, config: entry.configurationIntent(SingleGaugeIntent.self))
                 .containerBackground(.fill.tertiary, for: .widget)
-                .widgetURL(URL(string: "headroom://refresh"))
+                .widgetURL(URL(string: "hangtime://refresh"))
         }
         .configurationDisplayName("Single Limit")
         .description("One big gauge for the limit you care about.")
@@ -328,7 +328,7 @@ struct OverviewView: View {
     }
 
     private func unavailable(_ s: ProviderSnapshot) -> some View {
-        Text(s.status == .loggedOut ? "Signed out – open Headroom to sign in" : "No data")
+        Text(s.status == .loggedOut ? "Signed out – open Hangtime to sign in" : "No data")
             .font(.caption2).foregroundStyle(.orange).lineLimit(1)
     }
 
@@ -412,7 +412,7 @@ struct OverviewWidget: Widget {
         AppIntentConfiguration(kind: "Overview", intent: OverviewIntent.self, provider: IntentProvider<OverviewIntent>()) { entry in
             OverviewView(entry: entry, config: entry.configurationIntent(OverviewIntent.self))
                 .containerBackground(.fill.tertiary, for: .widget)
-                .widgetURL(URL(string: "headroom://refresh"))
+                .widgetURL(URL(string: "hangtime://refresh"))
         }
         .configurationDisplayName("All Providers")
         .description("What's left on every installed CLI.")
