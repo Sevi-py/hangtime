@@ -58,6 +58,7 @@ private struct GeneralSettings: View {
                 Toggle("Show banked resets", isOn: $s.showBankedResets)
                 Toggle("Ask for confirmation before using a reset", isOn: $s.confirmBeforeRedeem)
             }
+            UpdateSettingsSection()
         }
         .formStyle(.grouped)
         .frame(height: 380)

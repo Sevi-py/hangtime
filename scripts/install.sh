@@ -20,6 +20,18 @@ sleep 1
 rm -rf /Applications/Headroom.app
 cp -R "$APP" /Applications/
 
+# One-time: builds used to be signed by team 5P687673H4; the app group (widget-shared settings and the cached
+# snapshot) is team-prefixed, so carry it over to the current team's container.
+OLD_GROUP=~/Library/Group\ Containers/5P687673H4.app.headroom.shared
+NEW_GROUP=~/Library/Group\ Containers/8XX544GLPH.app.headroom.shared
+if [[ -d "$OLD_GROUP" && ! -e "$NEW_GROUP/.migrated" ]]; then
+  mkdir -p "$NEW_GROUP/Library/Preferences"
+  [[ -f "$OLD_GROUP/state.json" ]] && cp "$OLD_GROUP/state.json" "$NEW_GROUP/state.json"
+  OLD_PLIST="$OLD_GROUP/Library/Preferences/5P687673H4.app.headroom.shared.plist"
+  [[ -f "$OLD_PLIST" ]] && defaults import "$NEW_GROUP/Library/Preferences/8XX544GLPH.app.headroom.shared.plist" "$OLD_PLIST"
+  touch "$NEW_GROUP/.migrated"
+fi
+
 # Register the new extension, drop any stale registration, and restart the widget host
 # (chronod relaunches automatically and reloads placed widgets from the new extension).
 pluginkit -a /Applications/Headroom.app/Contents/PlugIns/HeadroomWidgets.appex 2>/dev/null || true

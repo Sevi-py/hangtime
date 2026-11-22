@@ -17,3 +17,6 @@ xcuserdata/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Release artifacts
+dist/

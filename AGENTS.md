@@ -41,3 +41,13 @@ Then commit and push to `origin main` (the remote is https://github.com/Sevi-py/
 - Never refresh the CLIs' OAuth tokens yourself. Let the CLI do it; otherwise it gets signed out.
 - Claude's usage endpoint is heavily rate limited (per token, and the token is shared with other tools). Don't
   hammer it with test requests.
+
+## Releases
+
+- `./scripts/release.sh <x.y.z>` is a dry run (signed, notarized artifacts in `dist/`); add `--publish` to ship.
+  Only publish when the user asks for a release.
+- Signing team is `8XX544GLPH` (Flarely e.U.). The app group is team-prefixed, so changing the team changes where
+  widget-shared settings live.
+- The in-app updater (`App/Support/Updater.swift`) only accepts updates signed by that team and notarized.
+- Settings and the setup-assistant flags live in `UserDefaults` for `app.headroom.mac`; never move them, or updates
+  would look like first launches.

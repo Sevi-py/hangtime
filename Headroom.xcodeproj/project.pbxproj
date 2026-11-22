@@ -13,6 +13,7 @@
 		16FB06DF9B18139A08424FC5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B70786DC4283C38D892754 /* Components.swift */; };
 		184D6F763C39FE4F1DA416B1 /* OverlayScroller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1FBCDAEBF2084F98C783C9B /* OverlayScroller.swift */; };
 		1A09D6AABFD68B6F23DF29DE /* LocalLogHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711AD10CAEC8CC5D1F88DBDA /* LocalLogHistory.swift */; };
+		1D84D7356A74C1AEE9AD1839 /* UpdateViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C831EE3A5F2DB010F1A3D4BE /* UpdateViews.swift */; };
 		2974EEA1C928B199B6B4DCED /* HeadroomApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13EF8EF54D23913AA87C8045 /* HeadroomApp.swift */; };
 		40076FED3C3F70C98B9FB605 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E50DD160845AB4A821B4ED /* Notifier.swift */; };
 		4074791E2DCB8C9B94CE920A /* T3CodeHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170A3F4EAD63C6EE7CF878E3 /* T3CodeHistory.swift */; };
@@ -31,6 +32,7 @@
 		731F48B7A25A76CDDA3865E1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 268CE1E0E7F22C80718BBC0F /* Models.swift */; };
 		7C1438B5A472C1A88A2A5266 /* CodexProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4782D79EC07DE70C6C2F0405 /* CodexProvider.swift */; };
 		80C05800E1D30C279F7102F1 /* ClaudeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A642B110FFF889AEF96702 /* ClaudeProvider.swift */; };
+		8185798BFB9A96EEDE601133 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E972806CC742A891D53F9F /* Updater.swift */; };
 		93CAD101E32943E52ED39C93 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2BE599D044CDAB1F08D7AC /* Theme.swift */; };
 		990E7CBF7281C6EAA3253B8B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F959987B01C4CDAD8D1201C3 /* SharedStore.swift */; };
 		9A7069C06E8F4FB07650DD5B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D2BE599D044CDAB1F08D7AC /* Theme.swift */; };
@@ -107,10 +109,12 @@
 		8900BFE904B4BBB2FE862526 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		90CA06E4F606D8BCE93053DB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		934328B58A20CE3D98264708 /* UsageControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageControls.swift; sourceTree = "<group>"; };
+		99E972806CC742A891D53F9F /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		9D2BE599D044CDAB1F08D7AC /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A1FBCDAEBF2084F98C783C9B /* OverlayScroller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayScroller.swift; sourceTree = "<group>"; };
 		AB2A02C0DEEFAC6B05EB7CFD /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		C1A642B110FFF889AEF96702 /* ClaudeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeProvider.swift; sourceTree = "<group>"; };
+		C831EE3A5F2DB010F1A3D4BE /* UpdateViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateViews.swift; sourceTree = "<group>"; };
 		D1FBF52279851A81AE1A9C5D /* UsageWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageWidgets.swift; sourceTree = "<group>"; };
 		D33C7C33244898E3C423EC8F /* AntigravityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityProvider.swift; sourceTree = "<group>"; };
 		D899D01E46DAC3123C6DF374 /* DarwinNotify.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarwinNotify.swift; sourceTree = "<group>"; };
@@ -188,6 +192,7 @@
 				A1FBCDAEBF2084F98C783C9B /* OverlayScroller.swift */,
 				14DC34DC04563D1C1363B36E /* SettingsView.swift */,
 				8900BFE904B4BBB2FE862526 /* SetupView.swift */,
+				C831EE3A5F2DB010F1A3D4BE /* UpdateViews.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -257,6 +262,7 @@
 			isa = PBXGroup;
 			children = (
 				1576FB841A30EC50F4DA003A /* Shell.swift */,
+				99E972806CC742A891D53F9F /* Updater.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -322,11 +328,11 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					4686BFD5F1855F6871F8CA0A = {
-						DevelopmentTeam = 5P687673H4;
+						DevelopmentTeam = 8XX544GLPH;
 						ProvisioningStyle = Automatic;
 					};
 					93DE6A93AAC5A7A492EA2991 = {
-						DevelopmentTeam = 5P687673H4;
+						DevelopmentTeam = 8XX544GLPH;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -403,6 +409,8 @@
 				5D94F45D762A7ED51ED69014 /* Shell.swift in Sources */,
 				4074791E2DCB8C9B94CE920A /* T3CodeHistory.swift in Sources */,
 				93CAD101E32943E52ED39C93 /* Theme.swift in Sources */,
+				1D84D7356A74C1AEE9AD1839 /* UpdateViews.swift in Sources */,
+				8185798BFB9A96EEDE601133 /* Updater.swift in Sources */,
 				C1D12D527AB58240FF7A8E07 /* UsageProvider.swift in Sources */,
 				D9EC4B9CDF1AF118B7294ED6 /* UsageWidgets.swift in Sources */,
 				4BD9F21A478C5D1451060B73 /* WidgetIntents.swift in Sources */,
@@ -508,7 +516,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 5P687673H4;
+				DEVELOPMENT_TEAM = 8XX544GLPH;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -521,7 +529,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -587,7 +595,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 5P687673H4;
+				DEVELOPMENT_TEAM = 8XX544GLPH;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -606,7 +614,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

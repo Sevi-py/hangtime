@@ -4,6 +4,26 @@ A native macOS menu bar app that shows how much of your AI coding subscriptions 
 **Claude Code**, **OpenAI Codex**, **xAI Grok CLI** and **Google Antigravity CLI** (`agy`). It also has desktop widgets, Control Center controls,
 banked-reset management and usage history charts.
 
+## Install
+
+Requires macOS 26 (Tahoe) or later.
+
+**Homebrew**
+
+```sh
+brew tap sevi-py/headroom https://github.com/Sevi-py/usage-widget
+brew install --cask sevi-py/headroom/headroom
+```
+
+**Direct download**: get `Headroom-<version>.dmg` (or `.zip`) from
+[Releases](https://github.com/Sevi-py/usage-widget/releases/latest) and move Headroom to Applications.
+Builds are signed with Developer ID and notarized by Apple.
+
+**Updates**: Headroom checks GitHub Releases every few hours. It installs updates the same way it was installed:
+`brew upgrade` for Homebrew installs, otherwise it downloads the release, verifies its signature and notarization,
+and replaces itself. Settings, the setup state and placed widgets are kept. Turn off automatic checks or installs
+in Settings → General → Updates.
+
 ## Features
 
 - **Menu bar status item**: what's left, per provider or just the most constrained limit, shown as text or mini
@@ -88,3 +108,21 @@ Debug builds include diagnostics:
 
 Provider logos come from [LobeHub Icons](https://github.com/lobehub/lobe-icons) (MIT). The logos are trademarks of
 their owners.
+
+## Releasing
+
+```sh
+./scripts/release.sh 1.2.0            # dry run: Developer ID sign, notarize, staple, package into dist/1.2.0
+./scripts/release.sh 1.2.0 --publish  # also bump project.yml, tag v1.2.0, create the GitHub release, update the cask
+```
+
+One-time setup on the release Mac:
+
+- Xcode signed in with an account on team `8XX544GLPH` (Flarely e.U.). Xcode uses the cloud-managed
+  Developer ID certificate.
+- Notarization credentials in the Keychain:
+  `xcrun notarytool store-credentials headroom-notary --apple-id <id> --team-id 8XX544GLPH --password <app-specific>`
+- `gh` signed in with push access.
+
+The Homebrew cask lives in [`Casks/headroom.rb`](Casks/headroom.rb), so this repo doubles as the tap. Releases
+and the tap only work for others once the repo is public.

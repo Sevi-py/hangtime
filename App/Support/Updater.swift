@@ -77,13 +77,11 @@ final class Updater {
 
     private func schedule() {
         timer?.invalidate()
-        timer = nil
-        guard autoCheck else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
             Task { @MainActor in
                 let u = Updater.shared
                 u.relaunchIfReplacedOnDisk()
-                if Date.now.timeIntervalSince(u.lastCheck ?? .distantPast) > 6 * 3600 {
+                if u.autoCheck, Date.now.timeIntervalSince(u.lastCheck ?? .distantPast) > 6 * 3600 {
                     await u.check(userInitiated: false)
                 }
             }

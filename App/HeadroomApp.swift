@@ -92,6 +92,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             let firstLaunch = SetupAssistant.needsSetup()
             AppModel.shared.start()
+            Updater.shared.start()
+            if let version = Updater.shared.consumeJustInstalled() {
+                AppModel.shared.toast = "Updated to Headroom \(version)"
+            }
             if firstLaunch { SetupAssistant.show() }
         }
     }

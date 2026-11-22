@@ -83,6 +83,7 @@ struct MenuContentView: View {
     private var menuRows: some View {
         @Bindable var s = model.settings
         VStack(spacing: 0) {
+            UpdateMenuRow()
             MenuRow(title: "Refresh Now", systemImage: "arrow.clockwise", shortcut: "⌘R", busy: model.isRefreshing) {
                 Task { await model.refreshAll(includeHistory: true) }
             }
