@@ -124,7 +124,6 @@ struct ProviderLimitsView: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if family != .systemSmall, let snap, snap.availableResetCount > 0 { resetsFooter(snap) }
             } else {
                 VStack(spacing: family == .systemSmall ? 6 : 9) {
                     ForEach(windows.prefix(family == .systemSmall ? 3 : family == .systemMedium ? 3 : 7)) { w in
@@ -133,7 +132,6 @@ struct ProviderLimitsView: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if family != .systemSmall, let snap, snap.availableResetCount > 0 { resetsFooter(snap) }
             }
         }
         .widgetURL(URL(string: "hangtime://refresh"))
@@ -146,18 +144,6 @@ struct ProviderLimitsView: View {
         case .weekly: return "Weekly"
         default: return w.title
         }
-    }
-
-    private func resetsFooter(_ snap: ProviderSnapshot) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: "arrow.counterclockwise.circle.fill").foregroundStyle(snap.provider.tint)
-            Text("\(snap.availableResetCount) banked reset\(snap.availableResetCount == 1 ? "" : "s")")
-            if let exp = snap.bankedResets.compactMap(\.expiresAt).min() {
-                Text("· \(Fmt.expires(exp, now: entry.date).lowercasingFirst)").foregroundStyle(.secondary)
-            }
-        }
-        .font(.system(size: 10, weight: .medium))
-        .lineLimit(1)
     }
 }
 
